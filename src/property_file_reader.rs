@@ -1,12 +1,14 @@
+use crate::args::Args;
 use crate::line::Line;
 use crate::node::Node;
 use crate::nodes::Nodes;
-use log::trace;
+use log::{error, trace};
 use std::{
     collections::HashMap,
     fmt::Display,
     fs::File,
     io::{BufRead, BufReader},
+    process,
     str::FromStr,
 };
 
@@ -58,24 +60,27 @@ pub struct PropertyFileReader {
 
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(
-        file: &File,
-        filename: &str,
-        delimiter: &Delimiter,
-    ) -> Result<Nodes, std::io::Error> {
+    pub fn parse(args: &Args, output_filename: String) -> Result<Nodes, std::io::Error> {
+        let file = match File::open(&args.filename) {
+            Ok(file) => file,
+            Err(err) => {
+                error!("{} {}", &args.filename, err.to_string());
+                process::exit(exitcode::CONFIG);
+            }
+        };
         let reader = BufReader::new(file);
 
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
         for result_line in reader.lines() {
             let line = result_line.unwrap();
-            config_file.process_line(line, line_number, delimiter);
+            config_file.process_line(line, line_number, &args.delimiter);
             line_number = line_number + 1;
         }
-        trace!("Read {} successfully", filename);
+        trace!("Read {} successfully", &args.filename);
 
         let property_map: &HashMap<String, Line> = config_file.get_content();
-        let mut yaml_nodes: Nodes = Nodes::new();
+        let mut yaml_nodes: Nodes = Nodes::new(output_filename);
 
         let mut new_node: Node;
         for (prop_key, line) in property_map.iter() {
