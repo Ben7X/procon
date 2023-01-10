@@ -2,6 +2,7 @@ extern crate exitcode;
 
 mod args;
 mod command;
+mod json_file_reader;
 mod line;
 mod node;
 mod nodes;
@@ -10,6 +11,7 @@ mod property_file_reader;
 
 use crate::args::Args;
 use crate::command::Command;
+use crate::json_file_reader::JsonFileReader;
 use crate::nodes::Nodes;
 use crate::nodes_converter::{to_json, to_properties, to_yaml};
 use crate::property_file_reader::{Delimiter, PropertyFileReader};
@@ -39,10 +41,10 @@ fn main() {
 
     debug!("{:?}", args);
 
-    // load properties file
+    trace!("\n####################################\nLoad property files\n####################################");
     let nodes: Nodes = load_file_to_nodes(&args.filename, &args.delimiter);
 
-    // start the program
+    trace!("\n####################################\nStart format conversion\n####################################");
     run(&args.command, &args.filename, &nodes).unwrap_or_else(|err| {
         error!("{}", err.to_string());
         process::exit(exitcode::DATAERR);
@@ -67,7 +69,6 @@ fn run(command: &Command, filename: &str, nodes: &Nodes) -> Result<String, std::
         }
     }
 
-    nodes.print_statistics();
     Ok(String::from("Done"))
 }
 
@@ -82,16 +83,14 @@ fn load_file_to_nodes(filename: &str, delimiter: &Delimiter) -> Nodes {
 
     let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
     match extension.to_lowercase().as_str() {
-        "properties" => {
-            PropertyFileReader::parse_property_file(&file, filename, delimiter).unwrap()
-        }
+        "properties" => PropertyFileReader::parse(&file, filename, delimiter).unwrap(),
         "yml" => {
             panic!("From yaml conversion not implemented yet")
         }
         "yaml" => {
             panic!("From yaml conversion not implemented yet")
         }
-        "json" => PropertyFileReader::parse_json_file(filename).unwrap(),
+        "json" => JsonFileReader::parse(filename).unwrap(),
         &_ => {
             panic!("Not supported file")
         }

@@ -73,7 +73,7 @@ pub struct Node {
 #[allow(dead_code)]
 impl Node {
     pub fn new_json_node(name: &str) -> Node {
-        let mut new_node = Node {
+        let new_node = Node {
             level: 0,
             parent: None,
             children: Vec::new(),
@@ -99,13 +99,15 @@ impl Node {
     }
 
     pub fn new_child(level: usize, parent: &mut Node, name: &str) -> Node {
-        Node {
+        let new_child = Node {
             level,
             parent: Some(Rc::new(parent.to_owned())),
             children: Vec::new(),
             name: String::from(name),
             value: NodeType::NONE,
-        }
+        };
+        trace!("Creating new child node {:?}", new_child);
+        new_child
     }
 
     pub fn find_common_node(&mut self, new_node: &Node) -> bool {
