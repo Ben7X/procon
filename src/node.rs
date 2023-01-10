@@ -10,7 +10,6 @@ use linked_hash_map::LinkedHashMap;
 use log::trace;
 use yaml_rust::Yaml;
 
-
 #[cfg(test)]
 #[path = "./node_test.rs"]
 mod node_test;
@@ -73,6 +72,17 @@ pub struct Node {
 
 #[allow(dead_code)]
 impl Node {
+    pub fn new_json_node(name: &str) -> Node {
+        let mut new_node = Node {
+            level: 0,
+            parent: None,
+            children: Vec::new(),
+            name: String::from(name),
+            value: NodeType::NONE,
+        };
+        trace!("Creating new node {:?}", new_node);
+        new_node
+    }
     pub fn new(node_parts: &mut Vec<&str>, value: &str) -> Node {
         let name = node_parts[0];
         node_parts.remove(0);
@@ -269,4 +279,3 @@ impl Into<Yaml> for &Node {
         data
     }
 }
-

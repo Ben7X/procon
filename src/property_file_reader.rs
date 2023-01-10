@@ -1,10 +1,12 @@
 use crate::line::Line;
-use crate::node::Node;
+use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
 use log::trace;
+use serde_json::Value;
 use std::{
     collections::HashMap,
     fmt::Display,
+    fs,
     fs::File,
     io::{BufRead, BufReader},
     str::FromStr,
@@ -59,9 +61,76 @@ pub struct PropertyFileReader {
     last_key: String,
 }
 
+fn json_to_node(key: &str, value: &Value, parent: &mut Node, level: usize) -> Node {
+    trace!("create node with key {} and value {}", key, value);
+    let new_node = match value {
+        Value::String(json_value) => {
+            let mut new_node = Node::new_child(level, parent, key);
+            new_node.value = NodeType::parse(json_value);
+            new_node
+        }
+        Value::Bool(json_value) => {
+            let mut new_node = Node::new_child(level, parent, key);
+            new_node.value = NodeType::parse(&json_value.to_string());
+            new_node
+        }
+        Value::Number(json_value) => {
+            let mut new_node = Node::new_child(level, parent, key);
+            new_node.value = NodeType::parse(&json_value.to_string());
+            new_node
+        }
+        Value::Object(json_value) => {
+            let mut new_parent = Node::new_child(level, parent, key);
+            let mut children: Vec<Node> = vec![];
+            for (map_key, map_value) in json_value.iter() {
+                let child_level = level + 1;
+                let child_node = json_to_node(map_key, map_value, &mut new_parent, child_level);
+                children.push(child_node.to_owned());
+            }
+            new_parent.children.append(&mut children.to_owned());
+            new_parent
+        }
+        Value::Null => Node::new_json_node(key),
+        Value::Array(_) => Node::new_json_node(key),
+    };
+
+    trace!("create node {:?}", new_node);
+    new_node
+}
+
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(
+    pub fn parse_json_file(path: &str) -> Result<Nodes, std::io::Error> {
+        let data: String = fs::read_to_string(path).expect("Unable to read file");
+        let res: Value = serde_json::from_str(&data).expect("Unable to parse");
+
+        // create new content
+        let mut config_file = PropertyFileReader::new();
+        let property_map: &HashMap<String, Line> = config_file.get_content();
+        let mut yaml_nodes: Nodes = Nodes::new(
+            property_map.len(),
+            config_file.comments.to_owned(),
+            config_file.blank_lines.to_owned(),
+        );
+
+        // check what json it is
+        match res {
+            Value::Object(ref obj) => {
+                for (mut key, value) in obj.iter() {
+                    let mut parent = Node::new_json_node(key);
+                    let child = json_to_node(&key, value, &mut parent, 0);
+                    parent.children.append(&mut vec![child]);
+                    yaml_nodes.merge(&mut parent);
+                }
+            }
+            _ => println!("not a valid serde_json value"),
+        };
+        for node in yaml_nodes.nodes.iter() {
+            println!("node {}", node.name)
+        }
+        Ok(yaml_nodes)
+    }
+    pub fn parse_property_file(
         file: &File,
         filename: &str,
         delimiter: &Delimiter,

@@ -82,16 +82,16 @@ fn load_file_to_nodes(filename: &str, delimiter: &Delimiter) -> Nodes {
 
     let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
     match extension.to_lowercase().as_str() {
-        "properties" => PropertyFileReader::parse(&file, filename, delimiter).unwrap(),
+        "properties" => {
+            PropertyFileReader::parse_property_file(&file, filename, delimiter).unwrap()
+        }
         "yml" => {
             panic!("From yaml conversion not implemented yet")
         }
         "yaml" => {
             panic!("From yaml conversion not implemented yet")
         }
-        "json" => {
-            panic!("From json conversion not implemented yet")
-        }
+        "json" => PropertyFileReader::parse_json_file(filename).unwrap(),
         &_ => {
             panic!("Not supported file")
         }
