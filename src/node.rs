@@ -10,7 +10,6 @@ use linked_hash_map::LinkedHashMap;
 use log::trace;
 use yaml_rust::Yaml;
 
-
 #[cfg(test)]
 #[path = "./node_test.rs"]
 mod node_test;
@@ -21,6 +20,7 @@ pub enum NodeType {
     NUMERIC(String),
     STRING(String),
     OBJECT(String),
+    LIST(Vec<String>),
     NONE,
 }
 
@@ -32,6 +32,18 @@ impl NodeType {
 
         if value.to_lowercase().starts_with("{") {
             return NodeType::OBJECT(value.to_string());
+        }
+
+        let parts: Vec<&str> = value.split(',').collect();
+        if parts.len() > 1 {
+            let mut list: Vec<String> = vec![];
+            for value in parts.iter() {
+                // trailing commas will result in empty string
+                if value.len() > 0 {
+                    list.push(value.to_string())
+                }
+            }
+            return NodeType::LIST(list);
         }
 
         let mut is_numeric = match value.parse::<f64>() {
@@ -51,14 +63,23 @@ impl NodeType {
     }
 
     pub fn to_string(&self) -> String {
-        let formated_value: String = match &self {
+        match &self {
             NodeType::STRING(value) => value.clone(),
             NodeType::NUMERIC(value) => value.clone(),
             NodeType::BOOLEAN(value) => value.to_string(),
             NodeType::OBJECT(value) => value.clone(),
+            NodeType::LIST(list) => {
+                let mut formatted_string: String = "".to_string();
+                for (index, value) in list.iter().enumerate() {
+                    if index != 0 {
+                        formatted_string.push_str(",");
+                    }
+                    formatted_string.push_str(value.as_str());
+                }
+                formatted_string
+            }
             NodeType::NONE => "".to_string(),
-        };
-        formated_value
+        }
     }
 }
 
@@ -73,6 +94,18 @@ pub struct Node {
 
 #[allow(dead_code)]
 impl Node {
+    pub fn new_json_node(name: &str) -> Node {
+        let new_node = Node {
+            level: 0,
+            parent: None,
+            children: Vec::new(),
+            name: String::from(name),
+            value: NodeType::NONE,
+        };
+        trace!("Creating new node {:?}", new_node);
+        new_node
+    }
+
     pub fn new(node_parts: &mut Vec<&str>, value: &str) -> Node {
         let name = node_parts[0];
         node_parts.remove(0);
@@ -89,13 +122,15 @@ impl Node {
     }
 
     pub fn new_child(level: usize, parent: &mut Node, name: &str) -> Node {
-        Node {
+        let new_child = Node {
             level,
             parent: Some(Rc::new(parent.to_owned())),
             children: Vec::new(),
             name: String::from(name),
             value: NodeType::NONE,
-        }
+        };
+        trace!("Creating new child node {:?}", new_child);
+        new_child
     }
 
     pub fn find_common_node(&mut self, new_node: &Node) -> bool {
@@ -127,7 +162,16 @@ impl Node {
         return false;
     }
 
-    pub fn create_child_nodes(&mut self, parts: &mut Vec<&str>, value: &str) {
+    pub fn sort(&mut self) {
+        for node in &mut self.children {
+            if !node.children.is_empty() {
+                node.sort();
+            }
+        }
+        self.children.sort();
+    }
+
+    fn create_child_nodes(&mut self, parts: &mut Vec<&str>, value: &str) {
         // case key has no subnodes
         if parts.len() == 0 {
             self.value = NodeType::parse(value);
@@ -146,15 +190,6 @@ impl Node {
             children.push(new_node.clone());
             last_node = &mut children[0];
         }
-    }
-
-    pub fn sort(&mut self) {
-        for node in &mut self.children {
-            if !node.children.is_empty() {
-                node.sort();
-            }
-        }
-        self.children.sort();
     }
 }
 
@@ -240,6 +275,15 @@ impl Into<JsonValue> for &Node {
             }
             NodeType::STRING(value) => JsonValue::String(value.clone()),
             NodeType::OBJECT(value) => JsonValue::String(value.clone()),
+            NodeType::LIST(list) => {
+                let mut array = vec![];
+                for value in list {
+                    let json_value: JsonValue = JsonValue::String(value.clone());
+                    // let json_value: JsonValue = value.into();
+                    array.push(json_value);
+                }
+                JsonValue::Array(array)
+            }
         };
         data
     }
@@ -265,8 +309,16 @@ impl Into<Yaml> for &Node {
             NodeType::NUMERIC(value) => Yaml::from_str(&value),
             NodeType::STRING(value) => Yaml::from_str(&value),
             NodeType::OBJECT(value) => Yaml::from_str(&value),
+            NodeType::LIST(list) => {
+                let mut array = vec![];
+                for value in list {
+                    let yaml_value: Yaml = Yaml::from_str(&value);
+                    // let yaml_value: Yaml = value.into();
+                    array.push(yaml_value);
+                }
+                Yaml::Array(array)
+            }
         };
         data
     }
 }
-

@@ -1,28 +1,34 @@
-use crate::line::Line;
 use crate::node::Node;
-use log::{info, trace};
+use log::trace;
+use std::slice::Iter;
+use std::string::String;
 
 pub struct Nodes {
     pub nodes: Vec<Node>,
-    input_lines: usize,
-    comments: Vec<Line>,
-    blank_lines: Vec<u32>,
+    pub output_filename: String,
 }
 
 #[allow(dead_code)]
 impl Nodes {
-    pub fn new(input_lines: usize, comments: Vec<Line>, blank_lines: Vec<u32>) -> Nodes {
+    pub fn new(output_filename: String) -> Nodes {
         Nodes {
             nodes: Vec::new(),
-            input_lines,
-            comments,
-            blank_lines,
+            output_filename,
         }
     }
+    pub fn get_output_filename(&self) -> String {
+        String::from(&self.output_filename)
+    }
+
+    pub fn iter(&self) -> Iter<'_, Node> {
+        self.nodes.iter()
+    }
+
     pub fn push(&mut self, node: Node) {
         trace!("Add node to the yaml nodes {:?} ", node);
         self.nodes.push(node);
     }
+
     pub fn is_empty(&self) -> bool {
         self.nodes.is_empty()
     }
@@ -46,26 +52,5 @@ impl Nodes {
             }
         }
         self.nodes.push(new_node.to_owned());
-    }
-
-    pub fn print_statistics(&self) {
-        let mut statistic = "Statistic\n".to_string();
-        statistic.push_str("Processed ");
-        statistic.push_str(&self.input_lines.to_string());
-        statistic.push_str(" properties\n");
-        for comment in &self.comments {
-            statistic.push_str("Ignore Comment at line ");
-            statistic.push_str(&comment.line_number.to_string());
-            statistic.push_str(" -> ");
-            statistic.push_str(&comment.value.to_string());
-            statistic.push_str("\n");
-        }
-
-        for blank_line in &self.blank_lines {
-            statistic.push_str("Ignore blank at line ");
-            statistic.push_str(&blank_line.to_string());
-            statistic.push_str("\n");
-        }
-        info!("{}", statistic);
     }
 }

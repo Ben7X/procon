@@ -10,8 +10,8 @@ That's being said I am a noob when it comes to rust development. So please be ni
 - Conversion from **property file** to json ✔️
 - Conversion from **yaml** to **property file** ❌
 - Conversion from **yaml** to **json  ❌
-- Conversion from **json** to **yaml** ❌
-- Conversion from **json** to **property file** ❌
+- Conversion from **json** to **yaml** ✔️
+- Conversion from **json** to **property file** ✔️
 
 ## You want to help
 If you want to help in the development feel free.

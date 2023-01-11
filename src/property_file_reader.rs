@@ -1,12 +1,14 @@
+use crate::args::Args;
 use crate::line::Line;
 use crate::node::Node;
 use crate::nodes::Nodes;
-use log::trace;
+use log::{error, trace};
 use std::{
     collections::HashMap,
     fmt::Display,
     fs::File,
     io::{BufRead, BufReader},
+    process,
     str::FromStr,
 };
 
@@ -53,36 +55,32 @@ impl FromStr for Delimiter {
 #[derive(Debug)]
 pub struct PropertyFileReader {
     content: HashMap<String, Line>,
-    error_lines: Vec<Line>,
-    comments: Vec<Line>,
-    blank_lines: Vec<u32>,
     last_key: String,
 }
 
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(
-        file: &File,
-        filename: &str,
-        delimiter: &Delimiter,
-    ) -> Result<Nodes, std::io::Error> {
+    pub fn parse(args: &Args, output_filename: String) -> Result<Nodes, std::io::Error> {
+        let file = match File::open(&args.filename) {
+            Ok(file) => file,
+            Err(err) => {
+                error!("{} {}", &args.filename, err.to_string());
+                process::exit(exitcode::CONFIG);
+            }
+        };
         let reader = BufReader::new(file);
 
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
         for result_line in reader.lines() {
             let line = result_line.unwrap();
-            config_file.process_line(line, line_number, delimiter);
+            config_file.process_line(line, line_number, &args.delimiter);
             line_number = line_number + 1;
         }
-        trace!("Read {} successfully", filename);
+        trace!("Read {} successfully", &args.filename);
 
         let property_map: &HashMap<String, Line> = config_file.get_content();
-        let mut yaml_nodes: Nodes = Nodes::new(
-            property_map.len(),
-            config_file.comments.to_owned(),
-            config_file.blank_lines.to_owned(),
-        );
+        let mut yaml_nodes: Nodes = Nodes::new(output_filename);
 
         let mut new_node: Node;
         for (prop_key, line) in property_map.iter() {
@@ -102,9 +100,6 @@ impl PropertyFileReader {
     fn new() -> PropertyFileReader {
         PropertyFileReader {
             content: HashMap::new(),
-            error_lines: Vec::new(),
-            comments: Vec::new(),
-            blank_lines: Vec::new(),
             last_key: String::from(""),
         }
     }
@@ -116,12 +111,10 @@ impl PropertyFileReader {
     fn process_line(&mut self, line: String, line_number: u32, delimiter: &Delimiter) {
         // case empty lines
         if line.is_empty() {
-            self.add_blank_line(line_number);
             return;
         }
         // case comments consider multiline here
         if !self.consider_multiline() && line.starts_with("#") || line.starts_with("!") {
-            self.add_comment(line, line_number);
             return;
         }
 
@@ -165,13 +158,13 @@ impl PropertyFileReader {
         self.last_key = String::from("");
     }
 
+    /// ignore whitespaces ent the end of key
     fn sanitize_key(&self, key: &str) -> String {
-        // ignore whitespaces ent the end of key
         key.trim_end().to_string()
     }
 
+    /// ignore whitespaces ent the end of key
     fn sanitize_value(&self, value: &str) -> String {
-        // ignore whitespaces ent the end of key
         value.trim_start().to_string()
     }
 
@@ -195,22 +188,5 @@ impl PropertyFileReader {
         trace!("{}", even_odd);
 
         even_odd == 1
-    }
-
-    fn add_comment(&mut self, value: String, line_number: u32) {
-        let line = Line::new("", &value, line_number);
-        trace!("Ignoring commented line {:?}", &line);
-        self.comments.push(line)
-    }
-
-    fn add_error_line(&mut self, value: String, line_number: u32) {
-        let line = Line::new("", &value, line_number);
-        trace!("Add error line {:?}", &line);
-        self.error_lines.push(line);
-    }
-
-    fn add_blank_line(&mut self, line_number: u32) {
-        trace!("Ignoring empty line at {}", line_number);
-        self.blank_lines.push(line_number);
     }
 }
