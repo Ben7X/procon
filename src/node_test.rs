@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use crate::node::NodeType::{LIST, NUMERIC, STRING};
     use crate::node::{Node, NodeType};
     use std::vec;
 
@@ -108,6 +109,58 @@ mod tests {
     }
 
     #[test]
+    fn node_value_list_values_in_property_file() {
+        let value = "test,test2,test4";
+        let expected_value = vec!["test", "test2", "test4"];
+        let node_type = NodeType::parse(value);
+        match node_type {
+            NodeType::LIST(v) => {
+                assert_eq!(v, expected_value);
+            }
+            _ => panic!("Wrong type"),
+        }
+    }
+
+    #[test]
+    fn node_value_list_values_in_property_file_trailing_comma() {
+        let value = "test,test2,";
+        let expected_value = vec!["test", "test2"];
+        let node_type = NodeType::parse(value);
+        match node_type {
+            NodeType::LIST(v) => {
+                assert_eq!(v, expected_value);
+            }
+            _ => panic!("Wrong type"),
+        }
+    }
+
+    #[test]
+    fn node_value_list_values_in_property_file_prefix_comma() {
+        let value = ",test2,";
+        let expected_value = vec!["test2"];
+        let node_type = NodeType::parse(value);
+        match node_type {
+            NodeType::LIST(v) => {
+                assert_eq!(v, expected_value);
+            }
+            _ => panic!("Wrong type"),
+        }
+    }
+
+    #[test]
+    fn node_value_list_values_in_property_file_semicolon_delimiter() {
+        let value = "test1;test2";
+        let expected_value = "test1;test2";
+        let node_type = NodeType::parse(value);
+        match node_type {
+            NodeType::STRING(v) => {
+                assert_eq!(v, expected_value);
+            }
+            _ => panic!("Wrong type"),
+        }
+    }
+
+    #[test]
     fn new_node_one_level() {
         let mut keys = vec!["level0"];
         let value = "testvalue";
@@ -200,5 +253,71 @@ mod tests {
         let node = Node::new(&mut keys, value);
         let data = json::stringify(&node);
         println!("{}", data);
+    }
+
+    #[test]
+    fn node_type_to_string_string() {
+        let node_type = STRING(String::from("test"));
+        let expected_value = String::from("test");
+        assert_eq!(expected_value, node_type.to_string())
+    }
+
+    #[test]
+    fn node_type_to_string_numeric() {
+        let node_type = NUMERIC(String::from("test"));
+        let expected_value = String::from("test");
+        assert_eq!(expected_value, node_type.to_string())
+    }
+
+    #[test]
+    fn node_type_to_string_boolean() {
+        let node_type = NUMERIC(String::from("test"));
+        let expected_value = String::from("test");
+        assert_eq!(expected_value, node_type.to_string())
+    }
+
+    #[test]
+    fn node_type_to_string_object() {
+        let node_type = NUMERIC(String::from("test"));
+        let expected_value = String::from("test");
+        assert_eq!(expected_value, node_type.to_string())
+    }
+
+    #[test]
+    fn node_type_to_string_list() {
+        let node_type = LIST(vec![String::from("test"), String::from("test2")]);
+        let expected_value = String::from("test,test2");
+        assert_eq!(expected_value, node_type.to_string())
+    }
+
+    #[test]
+    fn new_json_node() {
+        let key = "name";
+        let node = Node::new_json_node(&key);
+
+        assert_eq!(key, node.name);
+        assert_eq!(0, node.level);
+        assert_eq!(0, node.children.len());
+        assert_eq!(NodeType::NONE, node.value);
+        assert_eq!(None, node.parent);
+    }
+
+    #[test]
+    fn into_property_string() {
+        let node: &Node = &Node::new(&mut vec!["test", "test2"], "value");
+        let expected_value = "test.test2=value\n";
+
+        let property_representation: String = node.into();
+        assert_eq!(expected_value, property_representation);
+    }
+
+    #[test]
+    fn into_property_none() {
+        let mut node: Node = Node::new(&mut vec!["test", "test2"], "value");
+        node.value = NodeType::NONE;
+        let expected_value = "test.test2=value\n";
+
+        let property_representation: String = (&node).into();
+        assert_eq!(expected_value, property_representation);
     }
 }

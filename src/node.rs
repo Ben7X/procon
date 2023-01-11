@@ -34,12 +34,14 @@ impl NodeType {
             return NodeType::OBJECT(value.to_string());
         }
 
-        // todo add support for lists in property file
         let parts: Vec<&str> = value.split(',').collect();
         if parts.len() > 1 {
             let mut list: Vec<String> = vec![];
             for value in parts.iter() {
-                list.push(value.to_string())
+                // trailing commas will result in empty string
+                if value.len() > 0 {
+                    list.push(value.to_string())
+                }
             }
             return NodeType::LIST(list);
         }
@@ -103,6 +105,7 @@ impl Node {
         trace!("Creating new node {:?}", new_node);
         new_node
     }
+
     pub fn new(node_parts: &mut Vec<&str>, value: &str) -> Node {
         let name = node_parts[0];
         node_parts.remove(0);
@@ -159,7 +162,16 @@ impl Node {
         return false;
     }
 
-    pub fn create_child_nodes(&mut self, parts: &mut Vec<&str>, value: &str) {
+    pub fn sort(&mut self) {
+        for node in &mut self.children {
+            if !node.children.is_empty() {
+                node.sort();
+            }
+        }
+        self.children.sort();
+    }
+
+    fn create_child_nodes(&mut self, parts: &mut Vec<&str>, value: &str) {
         // case key has no subnodes
         if parts.len() == 0 {
             self.value = NodeType::parse(value);
@@ -178,15 +190,6 @@ impl Node {
             children.push(new_node.clone());
             last_node = &mut children[0];
         }
-    }
-
-    pub fn sort(&mut self) {
-        for node in &mut self.children {
-            if !node.children.is_empty() {
-                node.sort();
-            }
-        }
-        self.children.sort();
     }
 }
 
