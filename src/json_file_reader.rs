@@ -1,25 +1,29 @@
+use std::fs;
+
+use log::{debug, error};
+use serde_json::Value;
+
 use crate::args::Args;
 use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
-use log::error;
-use serde_json::Value;
-use std::fs;
+
+#[cfg(test)]
+#[path = "./json_file_reader_test.rs"]
+mod json_file_reader_test;
 
 pub struct JsonFileReader {}
 
 impl JsonFileReader {
-    pub fn parse(args: &Args, output_filename: String) -> Result<Nodes, std::io::Error> {
+    pub fn parse(args: &Args) -> Result<Nodes, std::io::Error> {
+        let filename = args.command.filename();
         // todo return error codes
-        let data: String = fs::read_to_string(&args.filename).expect("Unable to read file");
+        let data: String = fs::read_to_string(filename).expect("Unable to read file");
         let json_data: Value = serde_json::from_str(&data).expect("Unable to parse");
-        Ok(Self::convert_json_values_to_nodes(
-            &json_data,
-            output_filename,
-        ))
+        Ok(Self::convert_json_values_to_nodes(&json_data))
     }
 
-    fn convert_json_values_to_nodes(json_data: &Value, output_filename: String) -> Nodes {
-        let mut yaml_nodes: Nodes = Nodes::new(output_filename);
+    fn convert_json_values_to_nodes(json_data: &Value) -> Nodes {
+        let mut yaml_nodes: Nodes = Nodes::new();
         match json_data {
             Value::Object(ref obj) => {
                 for (key, value) in obj.iter() {
@@ -80,9 +84,10 @@ impl JsonFileReader {
             Value::Array(json_value) => {
                 let mut children: Vec<String> = vec![];
                 for value in json_value.iter() {
-                    children.push(value.to_string());
+                    debug!("{}", value);
+                    children.push(value.to_string().replace("\"", ""));
                 }
-                new_node.value = NodeType::LIST(children);
+                new_node.value = NodeType::ARRAY(children);
                 Some(new_node)
             }
             Value::Null => None,

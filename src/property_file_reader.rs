@@ -1,8 +1,3 @@
-use crate::args::Args;
-use crate::line::Line;
-use crate::node::Node;
-use crate::nodes::Nodes;
-use log::{error, trace};
 use std::{
     collections::HashMap,
     fmt::Display,
@@ -11,6 +6,13 @@ use std::{
     process,
     str::FromStr,
 };
+
+use log::{error, trace};
+
+use crate::args::Args;
+use crate::line::Line;
+use crate::node::Node;
+use crate::nodes::Nodes;
 
 #[cfg(test)]
 #[path = "./property_file_reader_test.rs"]
@@ -60,11 +62,12 @@ pub struct PropertyFileReader {
 
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(args: &Args, output_filename: String) -> Result<Nodes, std::io::Error> {
-        let file = match File::open(&args.filename) {
+    pub fn parse(args: &Args) -> Result<Nodes, std::io::Error> {
+        let filename = &args.command.filename();
+        let file = match File::open(filename) {
             Ok(file) => file,
             Err(err) => {
-                error!("{} {}", &args.filename, err.to_string());
+                error!("{} {}", filename, err.to_string());
                 process::exit(exitcode::CONFIG);
             }
         };
@@ -72,15 +75,16 @@ impl PropertyFileReader {
 
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
+        let delimiter = &args.command.delimiter();
         for result_line in reader.lines() {
             let line = result_line.unwrap();
-            config_file.process_line(line, line_number, &args.delimiter);
+            config_file.process_line(line, line_number, &delimiter.unwrap());
             line_number = line_number + 1;
         }
-        trace!("Read {} successfully", &args.filename);
+        trace!("Read {} successfully", filename);
 
         let property_map: &HashMap<String, Line> = config_file.get_content();
-        let mut yaml_nodes: Nodes = Nodes::new(output_filename);
+        let mut yaml_nodes: Nodes = Nodes::new();
 
         let mut new_node: Node;
         for (prop_key, line) in property_map.iter() {

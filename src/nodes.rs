@@ -1,23 +1,18 @@
-use crate::node::Node;
-use log::trace;
 use std::slice::Iter;
-use std::string::String;
 
+use log::trace;
+
+use crate::node::Node;
+
+#[derive(Debug)]
 pub struct Nodes {
-    pub nodes: Vec<Node>,
-    pub output_filename: String,
+    nodes: Vec<Node>,
 }
 
 #[allow(dead_code)]
 impl Nodes {
-    pub fn new(output_filename: String) -> Nodes {
-        Nodes {
-            nodes: Vec::new(),
-            output_filename,
-        }
-    }
-    pub fn get_output_filename(&self) -> String {
-        String::from(&self.output_filename)
+    pub fn new() -> Nodes {
+        Nodes { nodes: Vec::new() }
     }
 
     pub fn iter(&self) -> Iter<'_, Node> {
@@ -27,6 +22,10 @@ impl Nodes {
     pub fn push(&mut self, node: Node) {
         trace!("Add node to the yaml nodes {:?} ", node);
         self.nodes.push(node);
+    }
+
+    pub fn get(&self, index: usize) -> Option<&Node> {
+        self.nodes.get(index)
     }
 
     pub fn is_empty(&self) -> bool {
