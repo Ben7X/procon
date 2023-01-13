@@ -1,11 +1,11 @@
 [package]
 name = "procon"
 authors = ["sbrfs77"]
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "Apache-2.0"
-description = "A programm to convert between different property formats"
-repository = "https://github.com/Ben7X/props_converter"
+description = "Procon (Pro)perty (Con)verter \nA programm to convert between different property formats."
+repository = "https://github.com/Ben7X/procon"
 readme = "README.md"
 keywords = ["property_file", "yaml", "yml", "json", "conversion"]
 categories = ["command-line-utilities", "development-tools"]

@@ -5,9 +5,21 @@ use log::LevelFilter;
 
 use crate::property_file_reader::Delimiter;
 
-/// Program to convert between different property formats
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[command(
+    author,
+    version,
+    about,
+    long_about = "Procon (Pro)perty (Con)verter \
+    \nA programm to convert between different property formats.
+    \nProperty -> Json
+    \nProperty -> Yaml
+    \nJson -> Property
+    \nJson -> Yaml
+    \nYaml -> Property *not yet implemented
+    \nYaml-> Yaml *not yet implemented
+    "
+)]
 pub struct Args {
     #[command(subcommand)]
     pub command: Command,
