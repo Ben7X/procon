@@ -1,5 +1,6 @@
 [package]
 name = "procon"
+authors = ["sbrfs77"]
 version = "0.2.1"
 edition = "2021"
 license = "Apache-2.0"

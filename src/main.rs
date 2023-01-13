@@ -1,6 +1,21 @@
 extern crate exitcode;
+
+use std::path::Path;
+use std::process;
+
+use clap::Parser;
+use log::{debug, trace, LevelFilter};
+use log4rs::append::console::ConsoleAppender;
+use log4rs::config::{Appender, Root};
+use log4rs::Config;
+
+use crate::args::{Args, Command};
+use crate::json_file_reader::JsonFileReader;
+use crate::nodes::Nodes;
+use crate::nodes_converter::{to_json, to_properties, to_yaml};
+use crate::property_file_reader::PropertyFileReader;
+
 mod args;
-mod command;
 mod json_file_reader;
 mod line;
 mod node;
@@ -8,42 +23,35 @@ mod nodes;
 mod nodes_converter;
 mod property_file_reader;
 
-use crate::args::Args;
-use crate::command::Command;
-use crate::json_file_reader::JsonFileReader;
-use crate::nodes::Nodes;
-use crate::nodes_converter::{to_json, to_properties, to_yaml};
-use crate::property_file_reader::PropertyFileReader;
-use clap::Parser;
-use log::{debug, error, trace, LevelFilter};
-use log4rs::append::console::ConsoleAppender;
-use log4rs::config::{Appender, Root};
-use log4rs::Config;
-use std::path::Path;
-use std::process;
-use std::string::String;
-
 #[cfg(test)]
 #[path = "./main_test.rs"]
-mod main;
-
+mod main_test;
 fn main() {
     let args = Args::parse();
 
     setup_logger(args.log_level);
     debug!("{:?}", args);
 
+    validate_args(&args);
+
     debug!("\n####################################\nLoad property files\n####################################");
     let nodes: Nodes = load_file_to_nodes(&args).unwrap_or_else(|err| {
-        error!("{}", err.to_string());
+        eprintln!("{}", err.to_string());
         process::exit(exitcode::CONFIG);
     });
 
     debug!("\n####################################\nStart format conversion\n####################################");
     convert_nodes(&args, &nodes).unwrap_or_else(|err| {
-        error!("{}", err.to_string());
+        eprintln!("{}", err.to_string());
         process::exit(exitcode::DATAERR);
     });
+}
+
+fn validate_args(args: &Args) {
+    if args.dry_run && args.output_filename.is_some() {
+        eprintln!("Option -d and -o are mutual exclusive. Consult the man page or use --help");
+        process::exit(exitcode::CONFIG);
+    }
 }
 
 fn setup_logger(log_level: LevelFilter) {
@@ -56,40 +64,31 @@ fn setup_logger(log_level: LevelFilter) {
 }
 
 fn load_file_to_nodes(args: &Args) -> Result<Nodes, &'static str> {
-    let extension: &str = Path::new(&args.filename)
-        .extension()
-        .unwrap()
-        .to_str()
-        .unwrap();
+    let filename = &args.command.filename();
+    let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
 
-    let output_filename = output_filename(&args.command, &args.filename);
     match extension.to_lowercase().as_str() {
-        "properties" => Ok(PropertyFileReader::parse(&args, output_filename).unwrap()),
+        "properties" => Ok(PropertyFileReader::parse(&args).unwrap()),
         "yml" => Err("From yaml conversion not implemented yet"),
         "yaml" => Err("From yaml conversion not implemented yet"),
-        "json" => Ok(JsonFileReader::parse(&args, output_filename).unwrap()),
-        &_ => Err("Not supported file"),
+        "json" => Ok(JsonFileReader::parse(&args).unwrap()),
+        &_ => Err("Not supported file type. Properties, Json, Yaml"),
     }
-}
-
-fn output_filename(command: &Command, filename: &str) -> String {
-    let filename = Path::new(filename).file_stem().unwrap().to_str().unwrap();
-    return [filename, ".", command.to_string().to_lowercase().as_str()].concat();
 }
 
 fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<&'static str, std::io::Error> {
     match args.command {
-        Command::Properties => {
+        Command::Properties { .. } => {
             trace!("Converty yaml to property");
-            to_properties(nodes);
+            to_properties(&args, &nodes);
         }
-        Command::Yaml => {
+        Command::Json { .. } => {
             trace!("Converting property file to yaml");
-            to_yaml(&nodes);
+            to_json(&args, &nodes);
         }
-        Command::Json => {
+        Command::Yaml { .. } => {
             trace!("Converting property file to yaml");
-            to_json(&nodes);
+            to_yaml(&args, &nodes);
         }
     }
 
