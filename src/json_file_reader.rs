@@ -1,9 +1,13 @@
 use crate::args::Args;
 use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
-use log::error;
+use log::{debug, error};
 use serde_json::Value;
 use std::fs;
+
+#[cfg(test)]
+#[path = "./json_file_reader_test.rs"]
+mod json_file_reader_test;
 
 pub struct JsonFileReader {}
 
@@ -80,9 +84,10 @@ impl JsonFileReader {
             Value::Array(json_value) => {
                 let mut children: Vec<String> = vec![];
                 for value in json_value.iter() {
-                    children.push(value.to_string());
+                    debug!("{}", value);
+                    children.push(value.to_string().replace("\"", ""));
                 }
-                new_node.value = NodeType::LIST(children);
+                new_node.value = NodeType::ARRAY(children);
                 Some(new_node)
             }
             Value::Null => None,

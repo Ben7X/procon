@@ -20,7 +20,7 @@ pub enum NodeType {
     NUMERIC(String),
     STRING(String),
     OBJECT(String),
-    LIST(Vec<String>),
+    ARRAY(Vec<String>),
     NONE,
 }
 
@@ -36,14 +36,14 @@ impl NodeType {
 
         let parts: Vec<&str> = value.split(',').collect();
         if parts.len() > 1 {
-            let mut list: Vec<String> = vec![];
+            let mut array: Vec<String> = vec![];
             for value in parts.iter() {
                 // trailing commas will result in empty string
                 if value.len() > 0 {
-                    list.push(value.to_string())
+                    array.push(value.to_string())
                 }
             }
-            return NodeType::LIST(list);
+            return NodeType::ARRAY(array);
         }
 
         let mut is_numeric = match value.parse::<f64>() {
@@ -68,9 +68,9 @@ impl NodeType {
             NodeType::NUMERIC(value) => value.clone(),
             NodeType::BOOLEAN(value) => value.to_string(),
             NodeType::OBJECT(value) => value.clone(),
-            NodeType::LIST(list) => {
+            NodeType::ARRAY(array) => {
                 let mut formatted_string: String = "".to_string();
-                for (index, value) in list.iter().enumerate() {
+                for (index, value) in array.iter().enumerate() {
                     if index != 0 {
                         formatted_string.push_str(",");
                     }
@@ -275,11 +275,10 @@ impl Into<JsonValue> for &Node {
             }
             NodeType::STRING(value) => JsonValue::String(value.clone()),
             NodeType::OBJECT(value) => JsonValue::String(value.clone()),
-            NodeType::LIST(list) => {
+            NodeType::ARRAY(value) => {
                 let mut array = vec![];
-                for value in list {
-                    let json_value: JsonValue = JsonValue::String(value.clone());
-                    // let json_value: JsonValue = value.into();
+                for element in value {
+                    let json_value: JsonValue = JsonValue::String(element.clone());
                     array.push(json_value);
                 }
                 JsonValue::Array(array)
@@ -309,11 +308,10 @@ impl Into<Yaml> for &Node {
             NodeType::NUMERIC(value) => Yaml::from_str(&value),
             NodeType::STRING(value) => Yaml::from_str(&value),
             NodeType::OBJECT(value) => Yaml::from_str(&value),
-            NodeType::LIST(list) => {
+            NodeType::ARRAY(value) => {
                 let mut array = vec![];
-                for value in list {
-                    let yaml_value: Yaml = Yaml::from_str(&value);
-                    // let yaml_value: Yaml = value.into();
+                for element in value {
+                    let yaml_value: Yaml = Yaml::from_str(&element);
                     array.push(yaml_value);
                 }
                 Yaml::Array(array)

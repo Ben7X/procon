@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::node::NodeType::{LIST, NUMERIC, STRING};
+    use crate::node::NodeType::{ARRAY, NUMERIC, STRING};
     use crate::node::{Node, NodeType};
     use std::vec;
 
@@ -109,12 +109,12 @@ mod tests {
     }
 
     #[test]
-    fn node_value_list_values_in_property_file() {
+    fn node_value_array_values_in_property_file() {
         let value = "test,test2,test4";
         let expected_value = vec!["test", "test2", "test4"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::LIST(v) => {
+            NodeType::ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -122,12 +122,12 @@ mod tests {
     }
 
     #[test]
-    fn node_value_list_values_in_property_file_trailing_comma() {
+    fn node_value_array_values_in_property_file_trailing_comma() {
         let value = "test,test2,";
         let expected_value = vec!["test", "test2"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::LIST(v) => {
+            NodeType::ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -135,12 +135,12 @@ mod tests {
     }
 
     #[test]
-    fn node_value_list_values_in_property_file_prefix_comma() {
+    fn node_value_array_values_in_property_file_prefix_comma() {
         let value = ",test2,";
         let expected_value = vec!["test2"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::LIST(v) => {
+            NodeType::ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn node_value_list_values_in_property_file_semicolon_delimiter() {
+    fn node_value_array_values_in_property_file_semicolon_delimiter() {
         let value = "test1;test2";
         let expected_value = "test1;test2";
         let node_type = NodeType::parse(value);
@@ -284,8 +284,8 @@ mod tests {
     }
 
     #[test]
-    fn node_type_to_string_list() {
-        let node_type = LIST(vec![String::from("test"), String::from("test2")]);
+    fn node_type_to_string_array() {
+        let node_type = ARRAY(vec![String::from("test"), String::from("test2")]);
         let expected_value = String::from("test,test2");
         assert_eq!(expected_value, node_type.to_string())
     }
