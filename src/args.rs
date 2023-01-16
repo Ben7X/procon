@@ -46,6 +46,12 @@ pub struct Args {
 pub enum Command {
     /// Property format to convert to: Properties file
     Properties {
+        /// Path of the file to convert
+        filename: String,
+    },
+
+    /// Property format to convert to: Json
+    Json {
         /// Property delimiter
         ///
         /// only used in combination with properties command
@@ -56,14 +62,14 @@ pub enum Command {
         filename: String,
     },
 
-    /// Property format to convert to: Json
-    Json {
-        /// Path of the file to convert
-        filename: String,
-    },
-
     /// Property format to convert to: Yaml
     Yaml {
+        /// Property delimiter
+        ///
+        /// only used in combination with properties command
+        #[arg(short, long, default_value_t = Delimiter::Equals)]
+        property_delimiter: Delimiter,
+
         /// Path of the file to convert
         filename: String,
     },
@@ -86,11 +92,13 @@ impl Command {
     }
     pub fn delimiter(&self) -> Option<&Delimiter> {
         match self {
-            Command::Properties {
+            Command::Properties { .. } => None,
+            Command::Yaml {
                 property_delimiter, ..
             } => Some(property_delimiter),
-            Command::Json { .. } => None,
-            Command::Yaml { .. } => None,
+            Command::Json {
+                property_delimiter, ..
+            } => Some(property_delimiter),
         }
     }
 }

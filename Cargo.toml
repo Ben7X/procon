@@ -1,7 +1,7 @@
 [package]
 name = "procon"
 authors = ["sbrfs77"]
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 license = "Apache-2.0"
 description = "Procon (Pro)perty (Con)verter \nA programm to convert between different property formats."
