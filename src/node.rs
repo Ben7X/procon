@@ -94,6 +94,17 @@ pub struct Node {
 
 #[allow(dead_code)]
 impl Node {
+    pub fn new_yaml_node(level: usize, name: &str) -> Node {
+        let new_node = Node {
+            level,
+            parent: None,
+            children: Vec::new(),
+            name: String::from(name),
+            value: NodeType::NONE,
+        };
+        trace!("Creating new node {:?}", new_node);
+        new_node
+    }
     pub fn new_json_node(name: &str) -> Node {
         let new_node = Node {
             level: 0,

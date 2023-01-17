@@ -15,7 +15,7 @@ pub struct JsonFileReader {}
 
 impl JsonFileReader {
     pub fn parse(args: &Args) -> Result<Nodes, std::io::Error> {
-        let filename = args.command.filename();
+        let filename = args.target_format.filename();
         // todo return error codes
         let data: String = fs::read_to_string(filename).expect("Unable to read file");
         let json_data: Value = serde_json::from_str(&data).expect("Unable to parse");
@@ -23,23 +23,23 @@ impl JsonFileReader {
     }
 
     fn convert_json_values_to_nodes(json_data: &Value) -> Nodes {
-        let mut yaml_nodes: Nodes = Nodes::new();
+        let mut nodes: Nodes = Nodes::new();
         match json_data {
             Value::Object(ref obj) => {
                 for (key, value) in obj.iter() {
                     let mut parent = Self::json_to_node(&key, value, None, 0).unwrap();
-                    yaml_nodes.merge(&mut parent);
+                    nodes.merge(&mut parent);
                 }
             }
             Value::Array(obj) => {
                 for value in obj.iter() {
                     let mut parent = Self::json_to_node("", value, None, 0).unwrap();
-                    yaml_nodes.merge(&mut parent);
+                    nodes.merge(&mut parent);
                 }
             }
             _ => error!("not valid json"),
         };
-        yaml_nodes
+        nodes
     }
 
     fn json_to_node(

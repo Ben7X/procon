@@ -6,7 +6,7 @@ use linked_hash_map::LinkedHashMap;
 use log::debug;
 use yaml_rust::{Yaml, YamlEmitter};
 
-use crate::args::{Args, Command};
+use crate::args::{Args, TargetFormat};
 use crate::nodes::Nodes;
 
 #[cfg(test)]
@@ -58,17 +58,17 @@ fn determine_output_filename(args: &Args) -> String {
     if args.output_filename.is_some() {
         output_filename = args.output_filename.as_ref().unwrap().to_string();
     } else {
-        output_filename = default_filename(&args.command);
+        output_filename = default_filename(&args.target_format);
     }
     debug!("using output filename {}", output_filename);
     output_filename
 }
 
-fn default_filename(command: &Command) -> String {
+fn default_filename(command: &TargetFormat) -> String {
     let (filename, extension) = match command {
-        Command::Properties { filename, .. } => (filename, "properties".to_string()),
-        Command::Json { filename, .. } => (filename, "json".to_string()),
-        Command::Yaml { filename, .. } => (filename, "yaml".to_string()),
+        TargetFormat::Properties { filename, .. } => (filename, "properties".to_string()),
+        TargetFormat::Json { filename, .. } => (filename, "json".to_string()),
+        TargetFormat::Yaml { filename, .. } => (filename, "yaml".to_string()),
     };
     let filename = Path::new(filename).file_stem().unwrap().to_str().unwrap();
     return [filename, ".", extension.to_string().to_lowercase().as_str()].concat();

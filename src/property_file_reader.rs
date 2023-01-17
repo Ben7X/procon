@@ -63,7 +63,7 @@ pub struct PropertyFileReader {
 #[allow(dead_code)]
 impl PropertyFileReader {
     pub fn parse(args: &Args) -> Result<Nodes, std::io::Error> {
-        let filename = &args.command.filename();
+        let filename = &args.target_format.filename();
         let file = match File::open(filename) {
             Ok(file) => file,
             Err(err) => {
@@ -75,7 +75,7 @@ impl PropertyFileReader {
 
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
-        let delimiter = &args.command.delimiter();
+        let delimiter = &args.target_format.delimiter();
         for result_line in reader.lines() {
             let line = result_line.unwrap();
             config_file.process_line(line, line_number, &delimiter.unwrap());

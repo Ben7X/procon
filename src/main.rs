@@ -9,11 +9,12 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::config::{Appender, Root};
 use log4rs::Config;
 
-use crate::args::{Args, Command};
+use crate::args::{Args, TargetFormat};
 use crate::json_file_reader::JsonFileReader;
 use crate::nodes::Nodes;
 use crate::nodes_converter::{to_json, to_properties, to_yaml};
 use crate::property_file_reader::PropertyFileReader;
+use crate::yaml_file_reader::YamlFileReader;
 
 mod args;
 mod json_file_reader;
@@ -22,6 +23,7 @@ mod node;
 mod nodes;
 mod nodes_converter;
 mod property_file_reader;
+mod yaml_file_reader;
 
 #[cfg(test)]
 #[path = "./main_test.rs"]
@@ -64,29 +66,29 @@ fn setup_logger(log_level: LevelFilter) {
 }
 
 fn load_file_to_nodes(args: &Args) -> Result<Nodes, &'static str> {
-    let filename = &args.command.filename();
+    let filename = &args.target_format.filename();
     let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
 
     match extension.to_lowercase().as_str() {
         "properties" => Ok(PropertyFileReader::parse(&args).unwrap()),
-        "yml" => Err("From yaml conversion not implemented yet"),
-        "yaml" => Err("From yaml conversion not implemented yet"),
+        "yml" => Ok(YamlFileReader::parse(&args).unwrap()),
+        "yaml" => Ok(YamlFileReader::parse(&args).unwrap()),
         "json" => Ok(JsonFileReader::parse(&args).unwrap()),
         &_ => Err("Not supported file type. Properties, Json, Yaml"),
     }
 }
 
 fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<&'static str, std::io::Error> {
-    match args.command {
-        Command::Properties { .. } => {
+    match args.target_format {
+        TargetFormat::Properties { .. } => {
             trace!("Converty yaml to property");
             to_properties(&args, &nodes);
         }
-        Command::Json { .. } => {
+        TargetFormat::Json { .. } => {
             trace!("Converting property file to yaml");
             to_json(&args, &nodes);
         }
-        Command::Yaml { .. } => {
+        TargetFormat::Yaml { .. } => {
             trace!("Converting property file to yaml");
             to_yaml(&args, &nodes);
         }
