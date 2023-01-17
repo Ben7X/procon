@@ -11,7 +11,7 @@ use crate::property_file_reader::Delimiter;
     version,
     about,
     long_about = "Procon (Pro)perty (Con)verter \
-    \nA programm to convert between different property formats.
+    \nA program to convert between different property formats.
     \nProperty -> Json
     \nProperty -> Yaml
     \nJson -> Property
@@ -97,7 +97,9 @@ impl TargetFormat {
     }
     pub fn delimiter(&self) -> Option<&Delimiter> {
         match self {
-            TargetFormat::Properties { .. } => None,
+            TargetFormat::Properties {
+                property_delimiter, ..
+            } => Some(property_delimiter),
             TargetFormat::Yaml {
                 property_delimiter, ..
             } => Some(property_delimiter),

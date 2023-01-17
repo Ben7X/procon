@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Read;
 use std::process;
 
-use log::{debug, error};
+use log::error;
 use serde::Deserialize;
 use serde_yaml::Value;
 
