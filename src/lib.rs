@@ -25,7 +25,7 @@ pub mod nodes_converter;
 pub mod property_file_reader;
 pub mod yaml_file_reader;
 
-pub fn run() -> Result<&'static str, ConfigFileError> {
+pub fn run() -> Result<String, ConfigFileError> {
     let args: Args = parse_args();
     debug!("\n####################################\nLoad property files\n####################################");
     let filename = &args.target_format.filename();
@@ -70,21 +70,20 @@ fn setup_logger(log_level: LevelFilter) {
     let _handle = log4rs::init_config(config).unwrap();
 }
 
-fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<&'static str, ConfigFileError> {
+fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
     debug!("\n####################################\nStart format conversion\n####################################");
     match args.target_format {
         TargetFormat::Properties { .. } => {
             trace!("Converty yaml to property");
-            to_properties(&args, &nodes);
+            to_properties(&args, &nodes)
         }
         TargetFormat::Json { .. } => {
             trace!("Converting property file to yaml");
-            to_json(&args, &nodes);
+            to_json(&args, &nodes)
         }
         TargetFormat::Yaml { .. } => {
             trace!("Converting property file to yaml");
-            to_yaml(&args, &nodes);
+            to_yaml(&args, &nodes)
         }
     }
-    Ok("Done")
 }

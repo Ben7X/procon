@@ -7,13 +7,14 @@ use log::debug;
 use yaml_rust::{Yaml, YamlEmitter};
 
 use crate::args::{Args, TargetFormat};
+use crate::errors::ConfigFileError;
 use crate::nodes::Nodes;
 
 #[cfg(test)]
 #[path = "./nodes_converter_test.rs"]
 mod nodes_converter_test;
 
-pub fn to_yaml(args: &Args, nodes: &Nodes) {
+pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
     let mut map: LinkedHashMap<Yaml, Yaml> = LinkedHashMap::new();
     for node in nodes.iter() {
         map.insert(Yaml::from_str(&node.name), node.into());
@@ -23,33 +24,40 @@ pub fn to_yaml(args: &Args, nodes: &Nodes) {
     let final_node = Yaml::Hash(map);
     emitter.dump(&final_node).unwrap();
 
-    output_content(&args, content);
+    output_content(&args, content)
 }
 
-pub fn to_json(args: &Args, nodes: &Nodes) {
+pub fn to_json(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
     let mut json_data = json::JsonValue::new_object();
     for node in nodes.iter() {
         json_data[node.name.clone()] = node.into();
     }
-    output_content(&args, json_data.pretty(1));
+    output_content(&args, json_data.pretty(1))
 }
 
-pub fn to_properties(args: &Args, nodes: &Nodes) {
+pub fn to_properties(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
     let mut string_content = "".to_string();
     for node in nodes.iter() {
         let content: String = node.into();
         string_content.push_str(&content);
     }
-    output_content(&args, string_content);
+    output_content(&args, string_content)
 }
 
-fn output_content(args: &Args, content: String) {
+fn output_content(args: &Args, content: String) -> Result<String, ConfigFileError> {
     if args.dry_run {
         println!("{}", content);
+        Ok(content)
     } else {
         let output_filename = determine_output_filename(&args);
-        let mut output_file: File = File::create(output_filename).unwrap();
+        let mut output_file: File = File::create(&output_filename).unwrap();
         write!(output_file, "{}", content).unwrap();
+
+        let mut message = "Finished converting ".to_string();
+        message.push_str(&args.target_format.filename());
+        message.push_str(" to ");
+        message.push_str(&output_filename);
+        Ok(message)
     }
 }
 
