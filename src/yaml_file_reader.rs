@@ -18,16 +18,16 @@ impl YamlFileReader {
     pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
         let filename = args.target_format.filename();
         let mut file = File::open(filename).map_err(|_| ConfigFileError {
-            error: "Cannot open file".to_string(),
+            message: "Cannot open file".to_string(),
         })?;
 
         let mut content = String::new();
         file.read_to_string(&mut content)
             .map_err(|_| ConfigFileError {
-                error: "Cannot read from file".to_string(),
+                message: "Cannot read from file".to_string(),
             })?;
         let yaml_value: Value = serde_yaml::from_str(&content).map_err(|_| ConfigFileError {
-            error: "Wrong yaml format".to_string(),
+            message: "Wrong yaml format".to_string(),
         })?;
 
         Self::convert_yaml_values_to_nodes(&yaml_value)

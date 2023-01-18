@@ -18,10 +18,10 @@ impl JsonFileReader {
     pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
         let filename = args.target_format.filename();
         let data: String = fs::read_to_string(filename).map_err(|_| ConfigFileError {
-            error: "Unable to read file".to_string(),
+            message: "Unable to read file".to_string(),
         })?;
         let json_data: Value = serde_json::from_str(&data).map_err(|_| ConfigFileError {
-            error: "Unable to parse".to_string(),
+            message: "Unable to parse".to_string(),
         })?;
         Self::convert_json_values_to_nodes(&json_data)
     }

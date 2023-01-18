@@ -22,7 +22,9 @@ pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
     let mut content = String::new();
     let mut emitter = YamlEmitter::new(&mut content);
     let final_node = Yaml::Hash(map);
-    emitter.dump(&final_node).unwrap();
+    emitter.dump(&final_node).map_err(|_| ConfigFileError {
+        message: "Could convert to yaml format".to_string(),
+    })?;
 
     output_content(&args, content)
 }
@@ -50,8 +52,13 @@ fn output_content(args: &Args, content: String) -> Result<String, ConfigFileErro
         Ok(content)
     } else {
         let output_filename = determine_output_filename(&args);
-        let mut output_file: File = File::create(&output_filename).unwrap();
-        write!(output_file, "{}", content).unwrap();
+        let mut output_file: File =
+            File::create(&output_filename).map_err(|_| ConfigFileError {
+                message: "Could not create file".to_string(),
+            })?;
+        write!(output_file, "{}", content).map_err(|_| ConfigFileError {
+            message: "Could write to file".to_string(),
+        })?;
 
         let mut message = "Finished converting ".to_string();
         message.push_str(&args.target_format.filename());

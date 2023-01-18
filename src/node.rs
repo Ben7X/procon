@@ -176,7 +176,7 @@ impl Node {
     }
 
     fn create_child_nodes(&mut self, parts: &mut Vec<&str>, value: &str) {
-        // case key has no subnodes
+        // case key has no sub nodes
         if parts.len() == 0 {
             self.value = NodeType::parse(value);
             return;
@@ -274,8 +274,15 @@ impl Into<JsonValue> for &Node {
             }
             NodeType::BOOLEAN(value) => JsonValue::Boolean(value.clone()),
             NodeType::NUMERIC(value) => {
-                let num_value = value.parse::<i32>().unwrap();
-                JsonValue::Number(num_value.into())
+                // let num_value = value.parse::<i32>().unwrap();
+                // JsonValue::Number(num_value.into())
+                return match value.parse::<f64>() {
+                    Ok(parsed_value) => JsonValue::Number(parsed_value.into()),
+                    Err(_) => match value.parse::<usize>() {
+                        Ok(parsed_value) => JsonValue::Number(parsed_value.into()),
+                        Err(_) => JsonValue::Number(0.into()),
+                    },
+                };
             }
             NodeType::STRING(value) => JsonValue::String(value.clone()),
             NodeType::OBJECT(value) => JsonValue::String(value.clone()),

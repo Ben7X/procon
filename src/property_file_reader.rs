@@ -65,7 +65,7 @@ impl PropertyFileReader {
     pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
         let filename = &args.target_format.filename();
         let file = File::open(filename).map_err(|_| ConfigFileError {
-            error: "Cannot open file".to_string(),
+            message: "Cannot open file".to_string(),
         })?;
         let reader = BufReader::new(file);
 

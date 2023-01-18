@@ -27,22 +27,24 @@ pub mod yaml_file_reader;
 
 pub fn run() -> Result<String, ConfigFileError> {
     let args: Args = parse_args_and_setup_logger();
+    let nodes = parse_input_file(&args)?;
+    convert_nodes(&args, &nodes)
+}
 
+pub fn parse_input_file(args: &Args) -> Result<Nodes, ConfigFileError> {
     debug!("\n####################################\nLoad property files\n####################################");
     let filename = &args.target_format.filename();
     let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
 
-    let nodes = match extension.to_lowercase().as_str() {
+    match extension.to_lowercase().as_str() {
         "properties" => PropertyFileReader::parse(&args),
         "yml" => YamlFileReader::parse(&args),
         "yaml" => YamlFileReader::parse(&args),
         "json" => JsonFileReader::parse(&args),
         &_ => Err(ConfigFileError {
-            error: "Not supported file type:\n\t*.properties\n\t*.json\n\t*.yaml".to_string(),
+            message: "Not supported file type:\n\t*.properties\n\t*.json\n\t*.yaml".to_string(),
         }),
-    }?;
-
-    convert_nodes(&args, &nodes)
+    }
 }
 
 fn parse_args_and_setup_logger() -> Args {
