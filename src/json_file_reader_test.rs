@@ -9,7 +9,7 @@ mod tests {
         let content = String::from("{\"reader\":{\"datasource\":{\"jdbc-url\":\"localhost\"}},\"writer\":{\"datasource\":{\"jdbc-url\":\"localhost\"}} }");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         let reader_node = nodes.get(0).unwrap();
         assert_eq!("reader", reader_node.name);
@@ -33,7 +33,7 @@ mod tests {
         let content = String::from("{\"reader\": \"reader-value\"}");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         let reader_node = nodes.get(0).unwrap();
         assert_eq!("reader", reader_node.name);
@@ -42,14 +42,14 @@ mod tests {
 
     #[test]
     fn convert_json_values_to_nodes_array() {
-        let content = String::from("{\"readers\": [\"value-1\",\"value-1\"]}");
+        let content = String::from("{\"readers\": [\"value-1\",\"value-2\"]}");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         let reader_node = nodes.get(0).unwrap();
         assert_eq!("readers", reader_node.name);
-        assert_eq!("value-1,value-1", reader_node.value.to_string());
+        assert_eq!("value-1,value-2", reader_node.value.to_string());
     }
 
     #[test]
@@ -57,7 +57,7 @@ mod tests {
         let content = String::from("{\"readers\": []}");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         let reader_node = nodes.get(0).unwrap();
         assert_eq!("readers", reader_node.name);
@@ -69,7 +69,7 @@ mod tests {
         let content = String::from("{\"isReader\": true}");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         let reader_node = nodes.get(0).unwrap();
         assert_eq!("isReader", reader_node.name);
@@ -81,7 +81,7 @@ mod tests {
         let content = String::from("{\"isReader\": 1}");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         let reader_node = nodes.get(0).unwrap();
         assert_eq!("isReader", reader_node.name);
@@ -93,7 +93,7 @@ mod tests {
         let content = String::from("{\"isReader\": 1.78}");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         let reader_node = nodes.get(0).unwrap();
         assert_eq!("isReader", reader_node.name);
@@ -105,7 +105,7 @@ mod tests {
         let content = String::from("{}");
         let json_data: Value = serde_json::from_str(&content).expect("Unable to parse");
 
-        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data);
+        let nodes = JsonFileReader::convert_json_values_to_nodes(&json_data).unwrap();
 
         assert_eq!(None, nodes.get(0));
     }

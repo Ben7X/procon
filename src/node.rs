@@ -94,54 +94,48 @@ pub struct Node {
 
 #[allow(dead_code)]
 impl Node {
-    pub fn new_yaml_node(level: usize, name: &str) -> Node {
-        let new_node = Node {
+    fn new(
+        level: usize,
+        parent: Option<Rc<Node>>,
+        children: Vec<Node>,
+        name: String,
+        value: NodeType,
+    ) -> Node {
+        let node = Node {
             level,
-            parent: None,
-            children: Vec::new(),
-            name: String::from(name),
-            value: NodeType::NONE,
+            parent,
+            children,
+            name,
+            value,
         };
-        trace!("Creating new node {:?}", new_node);
-        new_node
-    }
-    pub fn new_json_node(name: &str) -> Node {
-        let new_node = Node {
-            level: 0,
-            parent: None,
-            children: Vec::new(),
-            name: String::from(name),
-            value: NodeType::NONE,
-        };
-        trace!("Creating new node {:?}", new_node);
-        new_node
+        trace!("Creating new node {:?}", node);
+        node
     }
 
-    pub fn new(node_parts: &mut Vec<&str>, value: &str) -> Node {
+    pub fn new_from_name(name: &str) -> Node {
+        Self::new(0, None, Vec::new(), String::from(name), NodeType::NONE)
+    }
+
+    pub fn new_from_name_and_level(level: usize, name: &str) -> Node {
+        Self::new(level, None, Vec::new(), String::from(name), NodeType::NONE)
+    }
+
+    pub fn new_from_parts(node_parts: &mut Vec<&str>, value: &str) -> Node {
         let name = node_parts[0];
         node_parts.remove(0);
-        let mut new_node = Node {
-            level: 0,
-            parent: None,
-            children: Vec::new(),
-            name: String::from(name),
-            value: NodeType::NONE,
-        };
+        let mut new_node = Self::new(0, None, Vec::new(), String::from(name), NodeType::NONE);
         new_node.create_child_nodes(node_parts, value);
-        trace!("Creating new node {:?}", new_node);
         new_node
     }
 
     pub fn new_child(level: usize, parent: &mut Node, name: &str) -> Node {
-        let new_child = Node {
+        Self::new(
             level,
-            parent: Some(Rc::new(parent.to_owned())),
-            children: Vec::new(),
-            name: String::from(name),
-            value: NodeType::NONE,
-        };
-        trace!("Creating new child node {:?}", new_child);
-        new_child
+            Some(Rc::new(parent.to_owned())),
+            Vec::new(),
+            String::from(name),
+            NodeType::NONE,
+        )
     }
 
     pub fn find_common_node(&mut self, new_node: &Node) -> bool {

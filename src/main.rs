@@ -10,6 +10,7 @@ use log4rs::config::{Appender, Root};
 use log4rs::Config;
 
 use crate::args::{Args, TargetFormat};
+use crate::errors::ConfigFileError;
 use crate::json_file_reader::JsonFileReader;
 use crate::nodes::Nodes;
 use crate::nodes_converter::{to_json, to_properties, to_yaml};
@@ -17,6 +18,7 @@ use crate::property_file_reader::PropertyFileReader;
 use crate::yaml_file_reader::YamlFileReader;
 
 mod args;
+mod errors;
 mod json_file_reader;
 mod line;
 mod node;
@@ -28,6 +30,7 @@ mod yaml_file_reader;
 #[cfg(test)]
 #[path = "./main_test.rs"]
 mod main_test;
+
 fn main() {
     let args = Args::parse();
 
@@ -65,16 +68,18 @@ fn setup_logger(log_level: LevelFilter) {
     let _handle = log4rs::init_config(config).unwrap();
 }
 
-fn load_file_to_nodes(args: &Args) -> Result<Nodes, &'static str> {
+fn load_file_to_nodes(args: &Args) -> Result<Nodes, ConfigFileError> {
     let filename = &args.target_format.filename();
     let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
 
     match extension.to_lowercase().as_str() {
-        "properties" => Ok(PropertyFileReader::parse(&args).unwrap()),
-        "yml" => Ok(YamlFileReader::parse(&args).unwrap()),
-        "yaml" => Ok(YamlFileReader::parse(&args).unwrap()),
-        "json" => Ok(JsonFileReader::parse(&args).unwrap()),
-        &_ => Err("Not supported file type. Properties, Json, Yaml"),
+        "properties" => PropertyFileReader::parse(&args),
+        "yml" => YamlFileReader::parse(&args),
+        "yaml" => YamlFileReader::parse(&args),
+        "json" => JsonFileReader::parse(&args),
+        &_ => Err(ConfigFileError {
+            error: "Not supported file type:\n\t*.properties\n\t*.json\n\t*.yaml".to_string(),
+        }),
     }
 }
 

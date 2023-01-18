@@ -3,13 +3,13 @@ use std::{
     fmt::Display,
     fs::File,
     io::{BufRead, BufReader},
-    process,
     str::FromStr,
 };
 
-use log::{error, trace};
+use log::trace;
 
 use crate::args::Args;
+use crate::errors::ConfigFileError;
 use crate::line::Line;
 use crate::node::Node;
 use crate::nodes::Nodes;
@@ -62,17 +62,21 @@ pub struct PropertyFileReader {
 
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(args: &Args) -> Result<Nodes, std::io::Error> {
+    pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
         let filename = &args.target_format.filename();
-        let file = match File::open(filename) {
-            Ok(file) => file,
-            Err(err) => {
-                error!("{} {}", filename, err.to_string());
-                process::exit(exitcode::CONFIG);
-            }
-        };
+        let file = File::open(filename).map_err(|_| ConfigFileError {
+            error: "Cannot open file".to_string(),
+        })?;
         let reader = BufReader::new(file);
 
+        Self::convert_property_to_nodes(&args, filename, reader)
+    }
+
+    fn convert_property_to_nodes(
+        args: &&Args,
+        filename: &String,
+        reader: BufReader<File>,
+    ) -> Result<Nodes, ConfigFileError> {
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
         let delimiter = &args.target_format.delimiter();
@@ -94,7 +98,7 @@ impl PropertyFileReader {
                 trace!("Ignoring empty parts");
                 continue;
             }
-            new_node = Node::new(&mut node_parts, &line.value);
+            new_node = Node::new_from_parts(&mut node_parts, &line.value);
             yaml_nodes.merge(&mut new_node);
         }
 

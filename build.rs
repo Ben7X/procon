@@ -1,5 +1,7 @@
 #[path = "src/args.rs"]
 mod args;
+#[path = "src/errors.rs"]
+mod errors;
 #[path = "src/line.rs"]
 mod line;
 #[path = "src/node.rs"]

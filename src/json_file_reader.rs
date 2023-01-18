@@ -4,6 +4,7 @@ use log::{debug, error};
 use serde_json::Value;
 
 use crate::args::Args;
+use crate::errors::ConfigFileError;
 use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
 
@@ -14,15 +15,18 @@ mod json_file_reader_test;
 pub struct JsonFileReader {}
 
 impl JsonFileReader {
-    pub fn parse(args: &Args) -> Result<Nodes, std::io::Error> {
+    pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
         let filename = args.target_format.filename();
-        // todo return error codes
-        let data: String = fs::read_to_string(filename).expect("Unable to read file");
-        let json_data: Value = serde_json::from_str(&data).expect("Unable to parse");
-        Ok(Self::convert_json_values_to_nodes(&json_data))
+        let data: String = fs::read_to_string(filename).map_err(|_| ConfigFileError {
+            error: "Unable to read file".to_string(),
+        })?;
+        let json_data: Value = serde_json::from_str(&data).map_err(|_| ConfigFileError {
+            error: "Unable to parse".to_string(),
+        })?;
+        Self::convert_json_values_to_nodes(&json_data)
     }
 
-    fn convert_json_values_to_nodes(json_data: &Value) -> Nodes {
+    fn convert_json_values_to_nodes(json_data: &Value) -> Result<Nodes, ConfigFileError> {
         let mut nodes: Nodes = Nodes::new();
         match json_data {
             Value::Object(ref obj) => {
@@ -39,7 +43,7 @@ impl JsonFileReader {
             }
             _ => error!("not valid json"),
         };
-        nodes
+        Ok(nodes)
     }
 
     fn json_to_node(
@@ -50,7 +54,7 @@ impl JsonFileReader {
     ) -> Option<Node> {
         let mut new_node: Node;
         if level == 0 {
-            new_node = Node::new_json_node(key);
+            new_node = Node::new_from_name(key);
         } else {
             new_node = Node::new_child(level, parent.unwrap(), key);
         }
