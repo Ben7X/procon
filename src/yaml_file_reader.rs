@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::Read;
 
-use log::error;
 use serde_yaml::Value;
 
 use crate::args::Args;
@@ -43,7 +42,17 @@ impl YamlFileReader {
                     nodes.merge(&mut parent);
                 }
             }
-            _ => error!("not valid yaml"),
+            Value::Sequence(yaml_value) => {
+                let mut parent = Node::new_from_name("");
+                let mut children: Vec<String> = vec![];
+                for value in yaml_value.iter() {
+                    let string_value = Self::yaml_value_to_string(value);
+                    children.push(string_value);
+                }
+                parent.value = NodeType::ARRAY(children);
+                nodes.merge(&mut parent);
+            }
+            _ => eprintln!("not valid yaml"),
         }
         Ok(nodes)
     }
@@ -108,6 +117,9 @@ impl YamlFileReader {
     fn yaml_value_to_string(value: &Value) -> String {
         if value.is_number() {
             return value.as_f64().unwrap().to_string();
+        }
+        if value.is_bool() {
+            return value.as_bool().unwrap().to_string();
         }
         value.as_str().unwrap().to_string()
     }

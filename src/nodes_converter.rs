@@ -15,16 +15,31 @@ use crate::nodes::Nodes;
 mod nodes_converter_test;
 
 pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
-    let mut map: LinkedHashMap<Yaml, Yaml> = LinkedHashMap::new();
-    for node in nodes.iter() {
-        map.insert(Yaml::from_str(&node.name), node.into());
-    }
     let mut content = String::new();
     let mut emitter = YamlEmitter::new(&mut content);
-    let final_node = Yaml::Hash(map);
-    emitter.dump(&final_node).map_err(|_| ConfigFileError {
-        message: "Could convert to yaml format".to_string(),
-    })?;
+
+    // todo refactor this
+    let mut map: LinkedHashMap<Yaml, Yaml> = LinkedHashMap::new();
+    for node in nodes.iter() {
+        // root list treatment
+        if node.name.is_empty() {
+            let array: Yaml = node.into();
+            emitter.dump(&array).map_err(|_| ConfigFileError {
+                message: "Could convert to yam format".to_string(),
+            })?;
+            break;
+        } else {
+            // the rest
+            map.insert(Yaml::from_str(&node.name), node.into());
+        }
+    }
+
+    if !map.is_empty() {
+        let final_node = Yaml::Hash(map);
+        emitter.dump(&final_node).map_err(|_| ConfigFileError {
+            message: "Could convert to yaml format".to_string(),
+        })?;
+    }
 
     output_content(&args, content)
 }
@@ -32,7 +47,12 @@ pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
 pub fn to_json(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
     let mut json_data = json::JsonValue::new_object();
     for node in nodes.iter() {
-        json_data[node.name.clone()] = node.into();
+        // root list treatment
+        if node.name.is_empty() {
+            json_data = node.into();
+        } else {
+            json_data[node.name.clone()] = node.into();
+        }
     }
     output_content(&args, json_data.pretty(1))
 }

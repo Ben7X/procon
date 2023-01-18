@@ -36,10 +36,13 @@ impl JsonFileReader {
                 }
             }
             Value::Array(obj) => {
+                let mut parent = Node::new_from_name("");
+                let mut children: Vec<String> = vec![];
                 for value in obj.iter() {
-                    let mut parent = Self::json_to_node("", value, None, 0).unwrap();
-                    nodes.merge(&mut parent);
+                    children.push(value.to_string().replace("\"", ""));
                 }
+                parent.value = NodeType::ARRAY(children);
+                nodes.merge(&mut parent);
             }
             _ => error!("not valid json"),
         };

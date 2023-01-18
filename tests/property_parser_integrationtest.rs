@@ -164,3 +164,124 @@ fn property_file_edge_case_whitespace_ignored() {
     let level1_node = nodes.get(0).unwrap();
     assert_node(&level1_node, "hello".to_string(), "hello".to_string());
 }
+
+#[test]
+fn property_file_edge_case_duplicated_keys() {
+    let args = create_args(
+        Delimiter::Equals,
+        "tests/resources/edge_case_duplicated_keys.properties",
+    );
+    let mut nodes = parse_input_file(&args).unwrap();
+    nodes.sort();
+    println!("{:?}", nodes);
+
+    let level1_node = nodes.get(0).unwrap();
+    assert_node(
+        &level1_node,
+        "duplicateKey".to_string(),
+        "second".to_string(),
+    );
+}
+
+#[test]
+fn property_file_edge_case_escape_even() {
+    let args = create_args(
+        Delimiter::Equals,
+        "tests/resources/edge_case_escape_even.properties",
+    );
+    let mut nodes = parse_input_file(&args).unwrap();
+    nodes.sort();
+    println!("{:?}", nodes);
+
+    let even_key = nodes.get(0).unwrap();
+    assert_node(
+        &even_key,
+        "evenKey".to_string(),
+        "This is on one line\\\\".to_string(),
+    );
+}
+
+#[test]
+fn property_file_edge_case_multiline() {
+    let args = create_args(
+        Delimiter::Equals,
+        "tests/resources/edge_case_multiline.properties",
+    );
+    let mut nodes = parse_input_file(&args).unwrap();
+    nodes.sort();
+
+    let multiline = nodes.get(0).unwrap();
+    assert_node(
+        &multiline,
+        "multiline".to_string(),
+        "This line continues".to_string(),
+    );
+}
+
+#[test]
+fn property_file_edge_case_escape_odd() {
+    let args = create_args(
+        Delimiter::Equals,
+        "tests/resources/edge_case_escape_odd.properties",
+    );
+    let mut nodes = parse_input_file(&args).unwrap();
+    nodes.sort();
+
+    let odd_key = nodes.get(0).unwrap();
+    assert_node(
+        &odd_key,
+        "oddKey".to_string(),
+        "This is line one and\\\\# This is line two".to_string(),
+    );
+}
+
+#[test]
+fn property_file_edge_case_escape_path() {
+    let args = create_args(
+        Delimiter::Equals,
+        "tests/resources/edge_case_escape_path.properties",
+    );
+    let mut nodes = parse_input_file(&args).unwrap();
+    nodes.sort();
+
+    let path = nodes.get(0).unwrap();
+    assert_node(
+        &path,
+        "path".to_string(),
+        "c:\\\\wiki\\\\templates".to_string(),
+    );
+}
+
+#[test]
+fn property_file_edge_case_escape_values() {
+    let args = create_args(
+        Delimiter::Equals,
+        "tests/resources/edge_case_escape_values.properties",
+    );
+    let mut nodes = parse_input_file(&args).unwrap();
+    nodes.sort();
+
+    let value_with_escapes = nodes.get(0).unwrap();
+    assert_node(
+        &value_with_escapes,
+        "valueWithEscapes".to_string(),
+        "This is a newline\\n and a carriage return\\r and a tab\\t.".to_string(),
+    );
+}
+
+#[test]
+fn property_file_edge_case_escape() {
+    let args = create_args(
+        Delimiter::Equals,
+        "tests/resources/edge_case_escape.properties",
+    );
+    let mut nodes = parse_input_file(&args).unwrap();
+    nodes.sort();
+
+    let welcome = nodes.get(0).unwrap();
+    assert_node(
+        &welcome,
+        "welcome".to_string(),
+        "Welcome to Wikipedia!".to_string(),
+    );
+}
