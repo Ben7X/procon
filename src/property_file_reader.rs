@@ -6,7 +6,7 @@ use std::{
     str::FromStr,
 };
 
-use log::trace;
+use log::debug;
 
 use crate::args::Args;
 use crate::errors::ConfigFileError;
@@ -85,15 +85,15 @@ impl PropertyFileReader {
             config_file.process_line(line, line_number, &delimiter.unwrap());
             line_number = line_number + 1;
         }
-        trace!("Read {} successfully", filename);
+        debug!("Read {} successfully", filename);
 
         let mut yaml_nodes: Nodes = Nodes::new();
         let mut new_node: Node;
         for (prop_key, line) in config_file.content.iter() {
             let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();
-            trace!("Node parts {:?}", node_parts);
+            debug!("Node parts {:?}", node_parts);
             if node_parts.is_empty() {
-                trace!("Ignoring empty parts");
+                debug!("Ignoring empty parts");
                 continue;
             }
             new_node = Node::new_from_parts(&mut node_parts, &line.value);
@@ -140,7 +140,7 @@ impl PropertyFileReader {
 
         // check for multi line comment
         if self.is_multiline(value) {
-            trace!("'{}' is a multiline", value);
+            debug!("'{}' is a multiline", value);
             self.last_key = self.sanitize_key(key);
         }
         self.add(key, value, line_number);
@@ -149,7 +149,7 @@ impl PropertyFileReader {
     fn add(&mut self, key: &str, value: &str, line_number: u32) -> Option<Line> {
         // ignore whitespaces ent the end of key and at the beginning of value
         let line = Line::new(key, value, line_number);
-        trace!("Adding to content {:?}", line);
+        debug!("Adding to content {:?}", line);
         return self.content.insert(line.key.clone(), line.clone());
     }
 
@@ -187,7 +187,7 @@ impl PropertyFileReader {
             counter = counter + 1;
         }
         let even_odd = counter % 2;
-        trace!("{}", even_odd);
+        debug!("{}", even_odd);
 
         even_odd == 1
     }

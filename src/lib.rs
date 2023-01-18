@@ -26,7 +26,8 @@ pub mod property_file_reader;
 pub mod yaml_file_reader;
 
 pub fn run() -> Result<String, ConfigFileError> {
-    let args: Args = parse_args();
+    let args: Args = parse_args_and_setup_logger();
+
     debug!("\n####################################\nLoad property files\n####################################");
     let filename = &args.target_format.filename();
     let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
@@ -44,7 +45,7 @@ pub fn run() -> Result<String, ConfigFileError> {
     convert_nodes(&args, &nodes)
 }
 
-fn parse_args() -> Args {
+fn parse_args_and_setup_logger() -> Args {
     let args = Args::parse();
 
     setup_logger(args.log_level);
@@ -54,6 +55,7 @@ fn parse_args() -> Args {
     args
 }
 
+// todo propagate error
 fn validate_args(args: &Args) {
     if args.dry_run && args.output_filename.is_some() {
         eprintln!("Option -d and -o are mutual exclusive. Consult the man page or use --help");
