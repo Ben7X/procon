@@ -2,14 +2,13 @@
 mod tests {
     use crate::node::NodeType::{ARRAY, NUMERIC, STRING};
     use crate::node::{Node, NodeType};
-    use std::vec;
 
     #[test]
     fn node_value_retrieve_type_string() {
         let value = "string";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::STRING(v) => assert_eq!(value, v),
+            STRING(v) => assert_eq!(value, v),
             _ => panic!("Wrong type"),
         }
     }
@@ -19,7 +18,7 @@ mod tests {
         let value = "";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::STRING(v) => assert_eq!(value, v),
+            STRING(v) => assert_eq!(value, v),
             _ => panic!("Wrong type"),
         }
     }
@@ -89,7 +88,7 @@ mod tests {
         let value = "1";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::NUMERIC(v) => {
+            NUMERIC(v) => {
                 assert_eq!(v, value);
             }
             _ => panic!("Wrong type"),
@@ -101,7 +100,7 @@ mod tests {
         let value = "1.5";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::NUMERIC(v) => {
+            NUMERIC(v) => {
                 assert_eq!(v, value);
             }
             _ => panic!("Wrong type"),
@@ -114,7 +113,7 @@ mod tests {
         let expected_value = vec!["test", "test2", "test4"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::ARRAY(v) => {
+            ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -127,7 +126,7 @@ mod tests {
         let expected_value = vec!["test", "test2"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::ARRAY(v) => {
+            ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -140,7 +139,7 @@ mod tests {
         let expected_value = vec!["test2"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::ARRAY(v) => {
+            ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -153,7 +152,7 @@ mod tests {
         let expected_value = "test1;test2";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::STRING(v) => {
+            STRING(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),

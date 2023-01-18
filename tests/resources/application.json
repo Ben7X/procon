@@ -1,0 +1,20 @@
+{
+ "reader": {
+  "datasource": {
+   "username": "user_iam",
+   "driver-class-name": "org.postgresql.Driver",
+   "password": "user",
+   "jdbc-url": "jdbc:postgresql://${DB_HOST}:5432/user?sslmode=require",
+   "maximum-pool-size": 20
+  }
+ },
+ "writer": {
+  "datasource": {
+   "jdbc-url": "jdbc:postgresql://${DB_HOST}:5432/user?sslmode=require",
+   "username": "user_iam",
+   "maximum-pool-size": 20,
+   "password": "user",
+   "driver-class-name": "org.postgresql.Driver"
+  }
+ }
+}

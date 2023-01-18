@@ -1,8 +1,7 @@
 use std::slice::Iter;
 
-use log::trace;
-
 use crate::node::Node;
+use log::trace;
 
 #[derive(Debug)]
 pub struct Nodes {
