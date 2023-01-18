@@ -87,11 +87,9 @@ impl PropertyFileReader {
         }
         trace!("Read {} successfully", filename);
 
-        let property_map: &HashMap<String, Line> = config_file.get_content();
         let mut yaml_nodes: Nodes = Nodes::new();
-
         let mut new_node: Node;
-        for (prop_key, line) in property_map.iter() {
+        for (prop_key, line) in config_file.content.iter() {
             let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();
             trace!("Node parts {:?}", node_parts);
             if node_parts.is_empty() {
@@ -110,10 +108,6 @@ impl PropertyFileReader {
             content: HashMap::new(),
             last_key: String::from(""),
         }
-    }
-
-    fn get_content(&self) -> &HashMap<String, Line> {
-        &self.content
     }
 
     fn process_line(&mut self, line: String, line_number: u32, delimiter: &Delimiter) {

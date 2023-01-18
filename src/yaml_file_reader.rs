@@ -47,26 +47,6 @@ impl YamlFileReader {
         }
         Ok(nodes)
     }
-    // fn convert_yaml_values_to_nodes(content: &mut String) -> Result<Nodes, ConfigFileError> {
-    //     let mut nodes: Nodes = Nodes::new();
-    //     for document in serde_yaml::Deserializer::from_str(&content) {
-    //         let value: Value = Value::deserialize(document).map_err(|_| ConfigFileError {
-    //             error: "Wrong yaml format".to_string(),
-    //         })?;
-    //         match value {
-    //             Value::Mapping(ref obj) => {
-    //                 for (map_key, map_value) in obj.iter() {
-    //                     let mut parent =
-    //                         Self::yaml_to_node(map_key.as_str().unwrap(), &map_value, None, 0)
-    //                             .unwrap();
-    //                     nodes.merge(&mut parent);
-    //                 }
-    //             }
-    //             _ => error!("not valid yaml"),
-    //         }
-    //     }
-    //     Ok(nodes)
-    // }
 
     fn yaml_to_node(
         key: &str,
