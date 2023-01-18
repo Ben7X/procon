@@ -1,0 +1,11 @@
+{
+  "management": {
+    "port" : 8080,
+    "metrics": {
+      "enable": {
+        "all": false,
+        "http": true
+      }
+    }
+  }
+}

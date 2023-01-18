@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use json::JsonValue;
 use linked_hash_map::LinkedHashMap;
-use log::trace;
+use log::debug;
 use yaml_rust::Yaml;
 
 #[cfg(test)]
@@ -94,50 +94,54 @@ pub struct Node {
 
 #[allow(dead_code)]
 impl Node {
-    pub fn new_json_node(name: &str) -> Node {
-        let new_node = Node {
-            level: 0,
-            parent: None,
-            children: Vec::new(),
-            name: String::from(name),
-            value: NodeType::NONE,
+    fn new(
+        level: usize,
+        parent: Option<Rc<Node>>,
+        children: Vec<Node>,
+        name: String,
+        value: NodeType,
+    ) -> Node {
+        let node = Node {
+            level,
+            parent,
+            children,
+            name,
+            value,
         };
-        trace!("Creating new node {:?}", new_node);
-        new_node
+        debug!("Creating new node {:?}", node);
+        node
     }
 
-    pub fn new(node_parts: &mut Vec<&str>, value: &str) -> Node {
+    pub fn new_from_name(name: &str) -> Node {
+        Self::new(0, None, Vec::new(), String::from(name), NodeType::NONE)
+    }
+
+    pub fn new_from_name_and_level(level: usize, name: &str) -> Node {
+        Self::new(level, None, Vec::new(), String::from(name), NodeType::NONE)
+    }
+
+    pub fn new_from_parts(node_parts: &mut Vec<&str>, value: &str) -> Node {
         let name = node_parts[0];
         node_parts.remove(0);
-        let mut new_node = Node {
-            level: 0,
-            parent: None,
-            children: Vec::new(),
-            name: String::from(name),
-            value: NodeType::NONE,
-        };
+        let mut new_node = Self::new(0, None, Vec::new(), String::from(name), NodeType::NONE);
         new_node.create_child_nodes(node_parts, value);
-        trace!("Creating new node {:?}", new_node);
         new_node
     }
 
     pub fn new_child(level: usize, parent: &mut Node, name: &str) -> Node {
-        let new_child = Node {
+        Self::new(
             level,
-            parent: Some(Rc::new(parent.to_owned())),
-            children: Vec::new(),
-            name: String::from(name),
-            value: NodeType::NONE,
-        };
-        trace!("Creating new child node {:?}", new_child);
-        new_child
+            Some(Rc::new(parent.to_owned())),
+            Vec::new(),
+            String::from(name),
+            NodeType::NONE,
+        )
     }
 
     pub fn find_common_node(&mut self, new_node: &Node) -> bool {
-        trace!(
+        debug!(
             "Checking node children {:?} for new node {:?}",
-            self.children,
-            new_node.name
+            self.children, new_node.name
         );
 
         // case not the same base node
@@ -156,7 +160,7 @@ impl Node {
             }
         }
 
-        trace!("Merge {:?} into {:?}", new_node, self);
+        debug!("Merge {:?} into {:?}", new_node, self);
         let children = &mut self.children;
         children.push(new_node.to_owned());
         return false;
@@ -172,7 +176,7 @@ impl Node {
     }
 
     fn create_child_nodes(&mut self, parts: &mut Vec<&str>, value: &str) {
-        // case key has no subnodes
+        // case key has no sub nodes
         if parts.len() == 0 {
             self.value = NodeType::parse(value);
             return;
@@ -185,7 +189,7 @@ impl Node {
                 new_node.value = NodeType::parse(value);
             }
 
-            trace!("Create child node {:?}", new_node);
+            debug!("Create child node {:?}", new_node);
             let children = &mut last_node.children;
             children.push(new_node.clone());
             last_node = &mut children[0];
@@ -270,8 +274,15 @@ impl Into<JsonValue> for &Node {
             }
             NodeType::BOOLEAN(value) => JsonValue::Boolean(value.clone()),
             NodeType::NUMERIC(value) => {
-                let num_value = value.parse::<i32>().unwrap();
-                JsonValue::Number(num_value.into())
+                // let num_value = value.parse::<i32>().unwrap();
+                // JsonValue::Number(num_value.into())
+                return match value.parse::<f64>() {
+                    Ok(parsed_value) => JsonValue::Number(parsed_value.into()),
+                    Err(_) => match value.parse::<usize>() {
+                        Ok(parsed_value) => JsonValue::Number(parsed_value.into()),
+                        Err(_) => JsonValue::Number(0.into()),
+                    },
+                };
             }
             NodeType::STRING(value) => JsonValue::String(value.clone()),
             NodeType::OBJECT(value) => JsonValue::String(value.clone()),

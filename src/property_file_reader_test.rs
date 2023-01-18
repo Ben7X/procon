@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use crate::line::Line;
     use crate::property_file_reader::{Delimiter, PropertyFileReader};
+    use std::collections::HashMap;
 
     fn assert_content(map: &HashMap<String, Line>, key: &str, value: &str) {
         assert_eq!(map.len(), 1);
@@ -16,7 +16,7 @@ mod tests {
         property_file.process_line(line, 1, &Delimiter::Equals);
 
         assert_content(
-            property_file.get_content(),
+            &property_file.content,
             "website",
             "https://en.wikipedia.org/",
         );
@@ -29,7 +29,7 @@ mod tests {
         property_file.process_line(line, 1, &Delimiter::Equals);
 
         assert_content(
-            property_file.get_content(),
+            &property_file.content,
             "website",
             "https://en.wikipedia.org/",
         );
@@ -42,7 +42,7 @@ mod tests {
         property_file.process_line(line, 1, &Delimiter::Equals);
 
         assert_content(
-            property_file.get_content(),
+            &property_file.content,
             "website",
             "https://en.wikipedia.org/",
         );
@@ -55,7 +55,7 @@ mod tests {
         property_file.process_line(line, 1, &Delimiter::Colon);
 
         assert_content(
-            property_file.get_content(),
+            &property_file.content,
             "website",
             "https://en.wikipedia.org/",
         );
@@ -68,7 +68,7 @@ mod tests {
         property_file.process_line(line, 1, &Delimiter::Whitespace);
 
         assert_content(
-            property_file.get_content(),
+            &property_file.content,
             "website",
             "https://en.wikipedia.org/",
         );
@@ -80,7 +80,7 @@ mod tests {
         let mut property_file = PropertyFileReader::new();
         property_file.process_line(line, 1, &Delimiter::Equals);
 
-        assert!(property_file.get_content().is_empty());
+        assert!(&property_file.content.is_empty());
     }
 
     #[test]
@@ -89,7 +89,7 @@ mod tests {
         let mut property_file = PropertyFileReader::new();
         property_file.process_line(line, 1, &Delimiter::Equals);
 
-        assert!(property_file.get_content().is_empty());
+        assert!(&property_file.content.is_empty());
     }
 
     #[test]
@@ -98,7 +98,7 @@ mod tests {
         let mut property_file = PropertyFileReader::new();
         property_file.process_line(line, 1, &Delimiter::Whitespace);
 
-        assert!(property_file.get_content().is_empty());
+        assert!(&property_file.content.is_empty());
     }
 
     #[test]
@@ -107,7 +107,7 @@ mod tests {
         let mut property_file = PropertyFileReader::new();
         property_file.process_line(line, 1, &Delimiter::Whitespace);
 
-        assert_content(property_file.get_content(), "empty", "");
+        assert_content(&property_file.content, "empty", "");
     }
 
     #[test]
@@ -119,11 +119,7 @@ mod tests {
         property_file.process_line(line, 1, &delimiter);
         property_file.process_line(line2, 2, &delimiter);
 
-        assert_content(
-            property_file.get_content(),
-            "multiline",
-            "This line #continues",
-        );
+        assert_content(&property_file.content, "multiline", "This line #continues");
     }
 
     #[test]
@@ -135,11 +131,7 @@ mod tests {
         property_file.process_line(line, 1, &delimiter);
         property_file.process_line(line2, 2, &delimiter);
 
-        assert_content(
-            property_file.get_content(),
-            "multiline",
-            "This line continues",
-        );
+        assert_content(&property_file.content, "multiline", "This line continues");
     }
 
     #[test]
@@ -151,11 +143,7 @@ mod tests {
         property_file.process_line(line, 1, &delimiter);
         property_file.process_line(line2, 2, &delimiter);
 
-        assert_content(
-            property_file.get_content(),
-            "multiline",
-            "This line continues",
-        );
+        assert_content(&property_file.content, "multiline", "This line continues");
     }
 
     #[test]
@@ -170,11 +158,7 @@ mod tests {
         property_file.process_line(line, 1, &delimiter);
         property_file.process_line(line2, 2, &delimiter);
 
-        assert_content(
-            property_file.get_content(),
-            "evenKey",
-            "This is on one line\\\\",
-        );
+        assert_content(&property_file.content, "evenKey", "This is on one line\\\\");
     }
 
     #[test]
@@ -187,7 +171,7 @@ mod tests {
         property_file.process_line(line2, 2, &delimiter);
 
         assert_content(
-            property_file.get_content(),
+            &property_file.content,
             "oddKey",
             "This is on one line\\\\# This is line two off an odd key",
         );
@@ -202,11 +186,7 @@ mod tests {
         property_file.process_line(line, 1, &delimiter);
         property_file.process_line(line2, 2, &delimiter);
 
-        assert_content(
-            property_file.get_content(),
-            "welcome",
-            "Welcome to Wikipedia!",
-        );
+        assert_content(&property_file.content, "welcome", "Welcome to Wikipedia!");
     }
 
     #[test]
@@ -216,7 +196,7 @@ mod tests {
         let delimiter = Delimiter::Equals;
         property_file.process_line(line, 1, &delimiter);
 
-        assert_content(property_file.get_content(), "helloInJapanese", "こんにちは");
+        assert_content(&property_file.content, "helloInJapanese", "こんにちは");
     }
 
     #[test]
@@ -227,7 +207,7 @@ mod tests {
         property_file.process_line(line, 1, &delimiter);
 
         assert_content(
-            property_file.get_content(),
+            &property_file.content,
             "encodedHelloInJapanese",
             "\\u3053\\u3093\\u306b\\u3061\\u306",
         );
@@ -242,7 +222,7 @@ mod tests {
         property_file.process_line(line, 1, &delimiter);
         property_file.process_line(line2, 2, &delimiter);
 
-        assert_content(property_file.get_content(), "duplicateKey", "second");
+        assert_content(&property_file.content, "duplicateKey", "second");
     }
 
     #[test]

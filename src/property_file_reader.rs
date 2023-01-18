@@ -3,13 +3,13 @@ use std::{
     fmt::Display,
     fs::File,
     io::{BufRead, BufReader},
-    process,
     str::FromStr,
 };
 
-use log::{error, trace};
+use log::debug;
 
 use crate::args::Args;
+use crate::errors::ConfigFileError;
 use crate::line::Line;
 use crate::node::Node;
 use crate::nodes::Nodes;
@@ -62,39 +62,41 @@ pub struct PropertyFileReader {
 
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(args: &Args) -> Result<Nodes, std::io::Error> {
-        let filename = &args.command.filename();
-        let file = match File::open(filename) {
-            Ok(file) => file,
-            Err(err) => {
-                error!("{} {}", filename, err.to_string());
-                process::exit(exitcode::CONFIG);
-            }
-        };
+    pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
+        let filename = &args.target_format.filename();
+        let file = File::open(filename).map_err(|_| ConfigFileError {
+            message: "Cannot open file".to_string(),
+        })?;
         let reader = BufReader::new(file);
 
+        Self::convert_property_to_nodes(&args, filename, reader)
+    }
+
+    fn convert_property_to_nodes(
+        args: &&Args,
+        filename: &String,
+        reader: BufReader<File>,
+    ) -> Result<Nodes, ConfigFileError> {
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
-        let delimiter = &args.command.delimiter();
+        let delimiter = &args.target_format.delimiter();
         for result_line in reader.lines() {
             let line = result_line.unwrap();
             config_file.process_line(line, line_number, &delimiter.unwrap());
             line_number = line_number + 1;
         }
-        trace!("Read {} successfully", filename);
+        debug!("Read {} successfully", filename);
 
-        let property_map: &HashMap<String, Line> = config_file.get_content();
         let mut yaml_nodes: Nodes = Nodes::new();
-
         let mut new_node: Node;
-        for (prop_key, line) in property_map.iter() {
+        for (prop_key, line) in config_file.content.iter() {
             let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();
-            trace!("Node parts {:?}", node_parts);
+            debug!("Node parts {:?}", node_parts);
             if node_parts.is_empty() {
-                trace!("Ignoring empty parts");
+                debug!("Ignoring empty parts");
                 continue;
             }
-            new_node = Node::new(&mut node_parts, &line.value);
+            new_node = Node::new_from_parts(&mut node_parts, &line.value);
             yaml_nodes.merge(&mut new_node);
         }
 
@@ -106,10 +108,6 @@ impl PropertyFileReader {
             content: HashMap::new(),
             last_key: String::from(""),
         }
-    }
-
-    fn get_content(&self) -> &HashMap<String, Line> {
-        &self.content
     }
 
     fn process_line(&mut self, line: String, line_number: u32, delimiter: &Delimiter) {
@@ -142,7 +140,7 @@ impl PropertyFileReader {
 
         // check for multi line comment
         if self.is_multiline(value) {
-            trace!("'{}' is a multiline", value);
+            debug!("'{}' is a multiline", value);
             self.last_key = self.sanitize_key(key);
         }
         self.add(key, value, line_number);
@@ -151,7 +149,7 @@ impl PropertyFileReader {
     fn add(&mut self, key: &str, value: &str, line_number: u32) -> Option<Line> {
         // ignore whitespaces ent the end of key and at the beginning of value
         let line = Line::new(key, value, line_number);
-        trace!("Adding to content {:?}", line);
+        debug!("Adding to content {:?}", line);
         return self.content.insert(line.key.clone(), line.clone());
     }
 
@@ -189,7 +187,7 @@ impl PropertyFileReader {
             counter = counter + 1;
         }
         let even_odd = counter % 2;
-        trace!("{}", even_odd);
+        debug!("{}", even_odd);
 
         even_odd == 1
     }

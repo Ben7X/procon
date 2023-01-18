@@ -1,8 +1,7 @@
 use std::slice::Iter;
 
-use log::trace;
-
 use crate::node::Node;
+use log::debug;
 
 #[derive(Debug)]
 pub struct Nodes {
@@ -20,7 +19,7 @@ impl Nodes {
     }
 
     pub fn push(&mut self, node: Node) {
-        trace!("Add node to the yaml nodes {:?} ", node);
+        debug!("Add node to the yaml nodes {:?} ", node);
         self.nodes.push(node);
     }
 

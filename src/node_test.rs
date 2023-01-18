@@ -2,14 +2,13 @@
 mod tests {
     use crate::node::NodeType::{ARRAY, NUMERIC, STRING};
     use crate::node::{Node, NodeType};
-    use std::vec;
 
     #[test]
     fn node_value_retrieve_type_string() {
         let value = "string";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::STRING(v) => assert_eq!(value, v),
+            STRING(v) => assert_eq!(value, v),
             _ => panic!("Wrong type"),
         }
     }
@@ -19,7 +18,7 @@ mod tests {
         let value = "";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::STRING(v) => assert_eq!(value, v),
+            STRING(v) => assert_eq!(value, v),
             _ => panic!("Wrong type"),
         }
     }
@@ -89,7 +88,7 @@ mod tests {
         let value = "1";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::NUMERIC(v) => {
+            NUMERIC(v) => {
                 assert_eq!(v, value);
             }
             _ => panic!("Wrong type"),
@@ -101,7 +100,7 @@ mod tests {
         let value = "1.5";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::NUMERIC(v) => {
+            NUMERIC(v) => {
                 assert_eq!(v, value);
             }
             _ => panic!("Wrong type"),
@@ -114,7 +113,7 @@ mod tests {
         let expected_value = vec!["test", "test2", "test4"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::ARRAY(v) => {
+            ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -127,7 +126,7 @@ mod tests {
         let expected_value = vec!["test", "test2"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::ARRAY(v) => {
+            ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -140,7 +139,7 @@ mod tests {
         let expected_value = vec!["test2"];
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::ARRAY(v) => {
+            ARRAY(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -153,7 +152,7 @@ mod tests {
         let expected_value = "test1;test2";
         let node_type = NodeType::parse(value);
         match node_type {
-            NodeType::STRING(v) => {
+            STRING(v) => {
                 assert_eq!(v, expected_value);
             }
             _ => panic!("Wrong type"),
@@ -164,7 +163,7 @@ mod tests {
     fn new_node_one_level() {
         let mut keys = vec!["level0"];
         let value = "testvalue";
-        let node = Node::new(&mut keys, value);
+        let node = Node::new_from_parts(&mut keys, value);
 
         assert_eq!("level0", node.name);
         assert_eq!(NodeType::parse(value), node.value);
@@ -175,7 +174,7 @@ mod tests {
     fn new_node_no_value() {
         let mut keys = vec!["level0"];
         let value = "";
-        let node = Node::new(&mut keys, value);
+        let node = Node::new_from_parts(&mut keys, value);
 
         assert_eq!("level0", node.name);
         assert_eq!(NodeType::parse(value), node.value);
@@ -186,7 +185,7 @@ mod tests {
     fn new_node_multiple_level() {
         let mut keys = vec!["level0", "level1", "level2"];
         let value = "testvalue";
-        let node = Node::new(&mut keys, value);
+        let node = Node::new_from_parts(&mut keys, value);
 
         assert_eq!(NodeType::NONE, node.value);
         assert_eq!("level0", node.name);
@@ -207,10 +206,10 @@ mod tests {
     fn find_common_node_same_base_level() {
         let mut keys = vec!["level0", "level1", "level2"];
         let value = "test1";
-        let mut node = Node::new(&mut keys, value);
+        let mut node = Node::new_from_parts(&mut keys, value);
         let mut keys2 = vec!["level0", "level1", "otherLevel"];
         let value2 = "test2";
-        let node2 = Node::new(&mut keys2, value2);
+        let node2 = Node::new_from_parts(&mut keys2, value2);
 
         let to_add = node.find_common_node(&node2);
         assert!(!to_add);
@@ -237,10 +236,10 @@ mod tests {
     fn find_common_node_different_base_level() {
         let mut keys = vec!["level0", "level1", "level2"];
         let value = "test1";
-        let mut node = Node::new(&mut keys, value);
+        let mut node = Node::new_from_parts(&mut keys, value);
         let mut keys2 = vec!["otherLevel", "level1", "level2"];
         let value2 = "test2";
-        let node2 = Node::new(&mut keys2, value2);
+        let node2 = Node::new_from_parts(&mut keys2, value2);
 
         let to_add = node.find_common_node(&node2);
         assert!(to_add)
@@ -250,7 +249,7 @@ mod tests {
     fn into_json() {
         let mut keys = vec!["level0", "level1", "level2"];
         let value = "test1";
-        let node = Node::new(&mut keys, value);
+        let node = Node::new_from_parts(&mut keys, value);
         let data = json::stringify(&node);
         println!("{}", data);
     }
@@ -293,7 +292,7 @@ mod tests {
     #[test]
     fn new_json_node() {
         let key = "name";
-        let node = Node::new_json_node(&key);
+        let node = Node::new_from_name(&key);
 
         assert_eq!(key, node.name);
         assert_eq!(0, node.level);
@@ -304,7 +303,7 @@ mod tests {
 
     #[test]
     fn into_property_string() {
-        let node: &Node = &Node::new(&mut vec!["test", "test2"], "value");
+        let node: &Node = &Node::new_from_parts(&mut vec!["test", "test2"], "value");
         let expected_value = "test.test2=value\n";
 
         let property_representation: String = node.into();
@@ -313,7 +312,7 @@ mod tests {
 
     #[test]
     fn into_property_none() {
-        let mut node: Node = Node::new(&mut vec!["test", "test2"], "value");
+        let mut node: Node = Node::new_from_parts(&mut vec!["test", "test2"], "value");
         node.value = NodeType::NONE;
         let expected_value = "test.test2=value\n";
 

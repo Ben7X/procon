@@ -2,13 +2,13 @@
 mod tests {
     use log::LevelFilter;
 
-    use crate::args::{Args, Command};
+    use crate::args::{Args, TargetFormat};
     use crate::nodes_converter::{default_filename, determine_output_filename};
     use crate::property_file_reader::Delimiter;
 
     #[test]
     fn default_filename_multiple_extensions() {
-        let command = Command::Yaml {
+        let command = TargetFormat::Yaml {
             property_delimiter: Delimiter::Equals,
             filename: "test.properties.properties".to_string(),
         };
@@ -17,7 +17,7 @@ mod tests {
 
     #[test]
     fn default_filename_multiple_dots_input_name() {
-        let command = Command::Yaml {
+        let command = TargetFormat::Yaml {
             property_delimiter: Delimiter::Equals,
             filename: "test.test2.test3.properties".to_string(),
         };
@@ -26,7 +26,7 @@ mod tests {
 
     #[test]
     fn default_filename_yaml() {
-        let command = Command::Yaml {
+        let command = TargetFormat::Yaml {
             property_delimiter: Delimiter::Equals,
             filename: "test.properties".to_string(),
         };
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn default_filename_json() {
-        let command = Command::Json {
+        let command = TargetFormat::Json {
             property_delimiter: Delimiter::Equals,
             filename: "test.properties".to_string(),
         };
@@ -44,7 +44,8 @@ mod tests {
 
     #[test]
     fn default_filename_properties() {
-        let command = Command::Properties {
+        let command = TargetFormat::Properties {
+            property_delimiter: Delimiter::Equals,
             filename: "test.yaml".to_string(),
         };
         assert_eq!("test.properties", default_filename(&command));
@@ -53,7 +54,8 @@ mod tests {
     #[test]
     fn determine_default_filename_default() {
         let args: Args = Args {
-            command: Command::Properties {
+            target_format: TargetFormat::Properties {
+                property_delimiter: Delimiter::Equals,
                 filename: "filename.properties".to_string(),
             },
             dry_run: false,
@@ -69,7 +71,8 @@ mod tests {
     fn determine_default_filename_command_line_input() {
         let cli_output_filename: String = "test.yaml".to_string();
         let args: Args = Args {
-            command: Command::Properties {
+            target_format: TargetFormat::Properties {
+                property_delimiter: Delimiter::Equals,
                 filename: "filename.properties".to_string(),
             },
             dry_run: false,

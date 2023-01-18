@@ -11,7 +11,7 @@ use crate::property_file_reader::Delimiter;
     version,
     about,
     long_about = "Procon (Pro)perty (Con)verter \
-    \nA programm to convert between different property formats.
+    \nA program to convert between different property formats.
     \nProperty -> Json
     \nProperty -> Yaml
     \nJson -> Property
@@ -22,7 +22,7 @@ use crate::property_file_reader::Delimiter;
 )]
 pub struct Args {
     #[command(subcommand)]
-    pub command: Command,
+    pub target_format: TargetFormat,
 
     /// Dry run
     ///
@@ -43,9 +43,14 @@ pub struct Args {
 }
 
 #[derive(Subcommand, Debug)]
-pub enum Command {
+pub enum TargetFormat {
     /// Property format to convert to: Properties file
     Properties {
+        /// Property delimiter
+        ///
+        /// only used in combination with properties command
+        #[arg(short, long, default_value_t = Delimiter::Equals)]
+        property_delimiter: Delimiter,
         /// Path of the file to convert
         filename: String,
     },
@@ -75,28 +80,30 @@ pub enum Command {
     },
 }
 
-impl Display for Command {
+impl Display for TargetFormat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
 #[allow(dead_code)]
-impl Command {
+impl TargetFormat {
     pub fn filename(&self) -> String {
         match self {
-            Command::Properties { filename, .. } => filename.to_string(),
-            Command::Json { filename, .. } => filename.to_string(),
-            Command::Yaml { filename, .. } => filename.to_string(),
+            TargetFormat::Properties { filename, .. } => filename.to_string(),
+            TargetFormat::Json { filename, .. } => filename.to_string(),
+            TargetFormat::Yaml { filename, .. } => filename.to_string(),
         }
     }
     pub fn delimiter(&self) -> Option<&Delimiter> {
         match self {
-            Command::Properties { .. } => None,
-            Command::Yaml {
+            TargetFormat::Properties {
                 property_delimiter, ..
             } => Some(property_delimiter),
-            Command::Json {
+            TargetFormat::Yaml {
+                property_delimiter, ..
+            } => Some(property_delimiter),
+            TargetFormat::Json {
                 property_delimiter, ..
             } => Some(property_delimiter),
         }
