@@ -11,7 +11,7 @@ use log::debug;
 use crate::args::Args;
 use crate::errors::ConfigFileError;
 use crate::line::Line;
-use crate::node::Node;
+use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
 
 #[cfg(test)]
@@ -67,16 +67,59 @@ impl PropertyFileReader {
         let file = File::open(filename).map_err(|_| ConfigFileError {
             message: "Cannot open file".to_string(),
         })?;
-        let reader = BufReader::new(file);
 
-        Self::convert_property_to_nodes(&args, filename, reader)
+        let config_file = Self::read_lines(args, filename, file);
+        Self::convert_property_to_nodes(&config_file)
     }
 
     fn convert_property_to_nodes(
-        args: &&Args,
-        filename: &String,
-        reader: BufReader<File>,
+        config_file: &PropertyFileReader,
     ) -> Result<Nodes, ConfigFileError> {
+        let mut yaml_nodes: Nodes = Nodes::new();
+        for (prop_key, line) in config_file.content.iter() {
+            let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();
+            debug!("Node parts {:?}", node_parts);
+            if node_parts.is_empty() {
+                debug!("Ignoring empty parts");
+                continue;
+            }
+
+            let name = node_parts[0];
+            node_parts.remove(0);
+            let mut new_node = Node::new_from_name(name);
+
+            // case key has no sub nodes
+            if node_parts.len() == 0 {
+                new_node.value = NodeType::parse(&line.value);
+                yaml_nodes.merge(&mut new_node);
+                continue;
+            }
+
+            // create children
+            Self::create_child_nodes(&mut new_node, &mut node_parts, &line.value);
+            yaml_nodes.merge(&mut new_node);
+        }
+
+        Ok(yaml_nodes)
+    }
+
+    pub fn create_child_nodes(node: &mut Node, parts: &mut Vec<&str>, value: &str) {
+        let mut last_node = &mut *node;
+        for (index, name) in parts.iter().enumerate() {
+            let mut new_node = Node::new_child(index + 1, last_node, name);
+            if index == parts.len() - 1 {
+                new_node.value = NodeType::parse(value);
+            }
+
+            debug!("Create child node {:?}", new_node);
+            let children = &mut last_node.children;
+            children.push(new_node.clone());
+            last_node = &mut children[0];
+        }
+    }
+
+    fn read_lines(args: &Args, filename: &String, file: File) -> PropertyFileReader {
+        let reader = BufReader::new(file);
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
         let delimiter = &args.target_format.delimiter();
@@ -86,21 +129,7 @@ impl PropertyFileReader {
             line_number = line_number + 1;
         }
         debug!("Read {} successfully", filename);
-
-        let mut yaml_nodes: Nodes = Nodes::new();
-        let mut new_node: Node;
-        for (prop_key, line) in config_file.content.iter() {
-            let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();
-            debug!("Node parts {:?}", node_parts);
-            if node_parts.is_empty() {
-                debug!("Ignoring empty parts");
-                continue;
-            }
-            new_node = Node::new_from_parts(&mut node_parts, &line.value);
-            yaml_nodes.merge(&mut new_node);
-        }
-
-        Ok(yaml_nodes)
+        config_file
     }
 
     fn new() -> PropertyFileReader {
