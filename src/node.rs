@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use json::JsonValue;
 use linked_hash_map::LinkedHashMap;
-use log::debug;
+use log::{debug, trace};
 use yaml_rust::Yaml;
 
 #[cfg(test)]
@@ -108,7 +108,7 @@ impl Node {
             name,
             value,
         };
-        debug!("Creating new node {:?}", node);
+        debug!("Create new node {:?}", node);
         node
     }
 
@@ -131,9 +131,10 @@ impl Node {
     }
 
     pub fn find_common_node(&mut self, new_node: &Node) -> bool {
-        debug!(
-            "Checking node children {:?} for new node {:?}",
-            self.children, new_node.name
+        trace!(
+            "Find common node {:?} in children {:?}",
+            new_node.name,
+            self.children
         );
 
         // case not the same base node
@@ -152,7 +153,7 @@ impl Node {
             }
         }
 
-        debug!("Merge {:?} into {:?}", new_node, self);
+        trace!("Merge {:?} into {:?}", new_node, self);
         let children = &mut self.children;
         children.push(new_node.to_owned());
         return false;

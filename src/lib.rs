@@ -2,10 +2,7 @@ use std::path::Path;
 use std::process;
 
 use clap::Parser;
-use log::{debug, trace, LevelFilter};
-use log4rs::append::console::ConsoleAppender;
-use log4rs::config::{Appender, Root};
-use log4rs::Config;
+use log::{debug, info};
 
 use crate::args::{Args, TargetFormat};
 use crate::errors::ConfigFileError;
@@ -27,6 +24,11 @@ pub mod yaml_file_reader;
 
 pub fn run() -> Result<String, ConfigFileError> {
     let args: Args = parse_args_and_setup_logger();
+
+    env_logger::Builder::new()
+        .filter_level(args.verbose.log_level_filter())
+        .init();
+
     let nodes = parse_input_file(&args)?;
     convert_nodes(&args, &nodes)
 }
@@ -36,7 +38,7 @@ pub fn parse_input_file(args: &Args) -> Result<Nodes, ConfigFileError> {
     let filename = &args.target_format.filename();
     let extension: &str = Path::new(filename).extension().unwrap().to_str().unwrap();
 
-    match extension.to_lowercase().as_str() {
+    let nodes = match extension.to_lowercase().as_str() {
         "properties" => PropertyFileReader::parse(&args),
         "yml" => YamlFileReader::parse(&args),
         "yaml" => YamlFileReader::parse(&args),
@@ -44,13 +46,14 @@ pub fn parse_input_file(args: &Args) -> Result<Nodes, ConfigFileError> {
         &_ => Err(ConfigFileError {
             message: "Not supported file type:\n\t*.properties\n\t*.json\n\t*.yaml".to_string(),
         }),
-    }
+    }?;
+
+    info!("Read {}", filename);
+    Ok(nodes)
 }
 
 fn parse_args_and_setup_logger() -> Args {
     let args = Args::parse();
-
-    setup_logger(args.log_level);
     debug!("{:?}", args);
 
     validate_args(&args);
@@ -65,28 +68,19 @@ fn validate_args(args: &Args) {
     }
 }
 
-fn setup_logger(log_level: LevelFilter) {
-    let stdout = ConsoleAppender::builder().build();
-    let config = Config::builder()
-        .appender(Appender::builder().build("stdout", Box::new(stdout)))
-        .build(Root::builder().appender("stdout").build(log_level))
-        .unwrap();
-    let _handle = log4rs::init_config(config).unwrap();
-}
-
 fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
     debug!("\n####################################\nStart format conversion\n####################################");
     match args.target_format {
         TargetFormat::Properties { .. } => {
-            trace!("Converty yaml to property");
+            debug!("Convert to properties");
             to_properties(&args, &nodes)
         }
         TargetFormat::Json { .. } => {
-            trace!("Converting property file to yaml");
+            debug!("Convert to json");
             to_json(&args, &nodes)
         }
         TargetFormat::Yaml { .. } => {
-            trace!("Converting property file to yaml");
+            debug!("Convert to yaml");
             to_yaml(&args, &nodes)
         }
     }

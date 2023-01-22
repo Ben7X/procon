@@ -8,10 +8,6 @@ use crate::errors::ConfigFileError;
 use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
 
-#[cfg(test)]
-#[path = "./json_file_reader_test.rs"]
-mod json_file_reader_test;
-
 pub struct JsonFileReader {}
 
 impl JsonFileReader {
@@ -25,7 +21,6 @@ impl JsonFileReader {
         })?;
         Self::convert_json_values_to_nodes(&json_data)
     }
-
     fn convert_json_values_to_nodes(json_data: &Value) -> Result<Nodes, ConfigFileError> {
         let mut nodes: Nodes = Nodes::new();
         match json_data {

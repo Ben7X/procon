@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use clap::{Parser, Subcommand};
-use log::LevelFilter;
+use clap_verbosity_flag::Verbosity;
 
 use crate::property_file_reader::Delimiter;
 
@@ -31,15 +31,14 @@ pub struct Args {
     #[arg(short, long, default_value_t = false)]
     pub dry_run: bool,
 
-    /// Log level of the program
-    #[arg(short, long, default_value_t = LevelFilter::Info)]
-    pub log_level: LevelFilter,
-
     /// File to write the converted format to the console
     ///
     /// This option is mutual exclusive with the --dry-run option.
     #[arg(short, long)]
     pub output_filename: Option<String>,
+
+    #[clap(flatten)]
+    pub(crate) verbose: Verbosity,
 }
 
 #[derive(Subcommand, Debug)]

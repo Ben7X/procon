@@ -6,7 +6,7 @@ use std::{
     str::FromStr,
 };
 
-use log::debug;
+use log::{debug, trace};
 
 use crate::args::Args;
 use crate::errors::ConfigFileError;
@@ -56,8 +56,8 @@ impl FromStr for Delimiter {
 
 #[derive(Debug)]
 pub struct PropertyFileReader {
-    content: HashMap<String, Line>,
-    last_key: String,
+    pub(crate) content: HashMap<String, Line>,
+    pub(crate) last_key: String,
 }
 
 #[allow(dead_code)]
@@ -68,19 +68,18 @@ impl PropertyFileReader {
             message: "Cannot open file".to_string(),
         })?;
 
-        let config_file = Self::read_lines(args, filename, file);
+        let config_file = Self::read_lines(args, file);
         Self::convert_property_to_nodes(&config_file)
     }
-
     fn convert_property_to_nodes(
         config_file: &PropertyFileReader,
     ) -> Result<Nodes, ConfigFileError> {
         let mut yaml_nodes: Nodes = Nodes::new();
         for (prop_key, line) in config_file.content.iter() {
             let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();
-            debug!("Node parts {:?}", node_parts);
+            trace!("Node parts: {:?}", node_parts);
             if node_parts.is_empty() {
-                debug!("Ignoring empty parts");
+                trace!("Ignore empty parts");
                 continue;
             }
 
@@ -111,14 +110,13 @@ impl PropertyFileReader {
                 new_node.value = NodeType::parse(value);
             }
 
-            debug!("Create child node {:?}", new_node);
             let children = &mut last_node.children;
             children.push(new_node.clone());
             last_node = &mut children[0];
         }
     }
 
-    fn read_lines(args: &Args, filename: &String, file: File) -> PropertyFileReader {
+    fn read_lines(args: &Args, file: File) -> PropertyFileReader {
         let reader = BufReader::new(file);
         let mut config_file = PropertyFileReader::new();
         let mut line_number = 1;
@@ -128,7 +126,6 @@ impl PropertyFileReader {
             config_file.process_line(line, line_number, &delimiter.unwrap());
             line_number = line_number + 1;
         }
-        debug!("Read {} successfully", filename);
         config_file
     }
 

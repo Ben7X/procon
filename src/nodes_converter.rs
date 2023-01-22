@@ -80,7 +80,7 @@ fn output_content(args: &Args, content: String) -> Result<String, ConfigFileErro
             message: "Could write to file".to_string(),
         })?;
 
-        let mut message = "Finished converting ".to_string();
+        let mut message = "Converted ".to_string();
         message.push_str(&args.target_format.filename());
         message.push_str(" to ");
         message.push_str(&output_filename);
@@ -95,7 +95,7 @@ fn determine_output_filename(args: &Args) -> String {
     } else {
         output_filename = default_filename(&args.target_format);
     }
-    debug!("using output filename {}", output_filename);
+    debug!("Output filename {}", output_filename);
     output_filename
 }
 

@@ -31,7 +31,6 @@ impl YamlFileReader {
 
         Self::convert_yaml_values_to_nodes(&yaml_value)
     }
-
     fn convert_yaml_values_to_nodes(yaml_value: &Value) -> Result<Nodes, ConfigFileError> {
         let mut nodes: Nodes = Nodes::new();
         match yaml_value {
