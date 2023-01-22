@@ -27,6 +27,7 @@ serde_yaml = "0.9.14"
 yaml-rust = "0.4.5"
 
 [dependencies]
+anyhow = "1.0.68"
 clap = { version = "4.0.14", features = ["derive"] }
 clap-verbosity-flag = "2.0.0"
 debug-ignore = "1.0.3"

@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::process;
 
 use clap::Parser;
 use log::{debug, info};
@@ -23,11 +22,13 @@ pub mod property_file_reader;
 pub mod yaml_file_reader;
 
 pub fn run() -> Result<String, ConfigFileError> {
-    let args: Args = parse_args_and_setup_logger();
+    let args: Args = parse_args_and_setup_logger()?;
 
     env_logger::Builder::new()
         .filter_level(args.verbose.log_level_filter())
         .init();
+
+    validate_args(&args)?;
 
     let nodes = parse_input_file(&args)?;
     convert_nodes(&args, &nodes)
@@ -52,20 +53,22 @@ pub fn parse_input_file(args: &Args) -> Result<Nodes, ConfigFileError> {
     Ok(nodes)
 }
 
-fn parse_args_and_setup_logger() -> Args {
+fn parse_args_and_setup_logger() -> Result<Args, ConfigFileError> {
     let args = Args::parse();
     debug!("{:?}", args);
 
-    validate_args(&args);
-    args
+    Ok(args)
 }
 
 // todo propagate error
-fn validate_args(args: &Args) {
+fn validate_args(args: &Args) -> Result<(), ConfigFileError> {
     if args.dry_run && args.output_filename.is_some() {
-        eprintln!("Option -d and -o are mutual exclusive. Consult the man page or use --help");
-        process::exit(exitcode::CONFIG);
+        return Err(ConfigFileError {
+            message: "Option -d and -o are mutual exclusive. Consult the man page or use --help"
+                .to_string(),
+        });
     }
+    Ok(())
 }
 
 fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
