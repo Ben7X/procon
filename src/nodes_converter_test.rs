@@ -46,7 +46,7 @@ mod tests {
     fn default_filename_properties() {
         let command = TargetFormat::Properties {
             property_delimiter: Delimiter::Equals,
-            filename: "test.yaml".to_string(),
+            file: "test.yaml".to_string(),
         };
         assert_eq!("test.properties", default_filename(&command));
     }
@@ -56,7 +56,7 @@ mod tests {
         let args: Args = Args {
             target_format: TargetFormat::Properties {
                 property_delimiter: Delimiter::Equals,
-                filename: "filename.properties".to_string(),
+                file: "filename.properties".to_string(),
             },
             dry_run: false,
             log_level: LevelFilter::Off,
@@ -73,7 +73,7 @@ mod tests {
         let args: Args = Args {
             target_format: TargetFormat::Properties {
                 property_delimiter: Delimiter::Equals,
-                filename: "filename.properties".to_string(),
+                file: "filename.properties".to_string(),
             },
             dry_run: false,
             log_level: LevelFilter::Off,

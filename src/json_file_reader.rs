@@ -1,6 +1,4 @@
-use std::fs;
-
-use log::{debug, error};
+use log::{debug, error, info};
 use serde_json::Value;
 
 use crate::args::Args;
@@ -11,12 +9,9 @@ use crate::nodes::Nodes;
 pub struct JsonFileReader {}
 
 impl JsonFileReader {
-    pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
-        let filename = args.target_format.filename();
-        let data: String = fs::read_to_string(filename).map_err(|_| ConfigFileError {
-            message: "Unable to read file".to_string(),
-        })?;
-        let json_data: Value = serde_json::from_str(&data).map_err(|_| ConfigFileError {
+    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ConfigFileError> {
+        info!("Use JsonFileReader");
+        let json_data: Value = serde_json::from_str(&content).map_err(|_| ConfigFileError {
             message: "Unable to parse".to_string(),
         })?;
         Self::convert_json_values_to_nodes(&json_data)

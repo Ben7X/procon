@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
@@ -31,6 +32,24 @@ pub struct Args {
     #[arg(short, long, default_value_t = false)]
     pub dry_run: bool,
 
+    /// Flag to specify pipe in bytes are in property file format
+    ///
+    /// If data piped in via stdin, what is the file format
+    #[arg(short = 'p', long)]
+    pub from_property_file: bool,
+
+    /// Flag to specify pipe in bytes are in yaml file format
+    ///
+    /// If data piped in via stdin, what is the file format
+    #[arg(short = 'y', long)]
+    pub from_yaml_file: bool,
+
+    /// Flag to specify pipe in bytes are in json file format
+    ///
+    /// If data piped in via stdin, what is the file format
+    #[arg(short = 'j', long)]
+    pub from_json_file: bool,
+
     /// File to write the converted format to the console
     ///
     /// This option is mutual exclusive with the --dry-run option.
@@ -38,7 +57,7 @@ pub struct Args {
     pub output_filename: Option<String>,
 
     #[clap(flatten)]
-    pub(crate) verbose: Verbosity,
+    pub verbose: Verbosity,
 }
 
 #[derive(Subcommand, Debug)]
@@ -51,7 +70,7 @@ pub enum TargetFormat {
         #[arg(short, long, default_value_t = Delimiter::Equals)]
         property_delimiter: Delimiter,
         /// Path of the file to convert
-        filename: String,
+        file: PathBuf,
     },
 
     /// Property format to convert to: Json
@@ -63,7 +82,7 @@ pub enum TargetFormat {
         property_delimiter: Delimiter,
 
         /// Path of the file to convert
-        filename: String,
+        file: PathBuf,
     },
 
     /// Property format to convert to: Yaml
@@ -75,7 +94,7 @@ pub enum TargetFormat {
         property_delimiter: Delimiter,
 
         /// Path of the file to convert
-        filename: String,
+        file: PathBuf,
     },
 }
 
@@ -87,11 +106,11 @@ impl Display for TargetFormat {
 
 #[allow(dead_code)]
 impl TargetFormat {
-    pub fn filename(&self) -> String {
+    pub fn path_buf(&self) -> &PathBuf {
         match self {
-            TargetFormat::Properties { filename, .. } => filename.to_string(),
-            TargetFormat::Json { filename, .. } => filename.to_string(),
-            TargetFormat::Yaml { filename, .. } => filename.to_string(),
+            TargetFormat::Properties { file, .. } => file,
+            TargetFormat::Json { file, .. } => file,
+            TargetFormat::Yaml { file, .. } => file,
         }
     }
     pub fn delimiter(&self) -> Option<&Delimiter> {

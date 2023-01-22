@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::Write;
-use std::path::Path;
+use std::path::PathBuf;
 
 use linked_hash_map::LinkedHashMap;
 use log::debug;
@@ -67,9 +67,9 @@ pub fn to_properties(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileErr
 }
 
 fn output_content(args: &Args, content: String) -> Result<String, ConfigFileError> {
+    println!("{}", content);
     if args.dry_run {
-        println!("{}", content);
-        Ok(content)
+        Ok(String::from("Print converted format to console"))
     } else {
         let output_filename = determine_output_filename(&args);
         let mut output_file: File =
@@ -81,7 +81,7 @@ fn output_content(args: &Args, content: String) -> Result<String, ConfigFileErro
         })?;
 
         let mut message = "Converted ".to_string();
-        message.push_str(&args.target_format.filename());
+        message.push_str(&args.target_format.path_buf().to_str().unwrap());
         message.push_str(" to ");
         message.push_str(&output_filename);
         Ok(message)
@@ -92,19 +92,25 @@ fn determine_output_filename(args: &Args) -> String {
     let output_filename: String;
     if args.output_filename.is_some() {
         output_filename = args.output_filename.as_ref().unwrap().to_string();
+        debug!("User provided output filename {}", output_filename);
     } else {
         output_filename = default_filename(&args.target_format);
+        debug!("User default output filename {}", output_filename);
     }
-    debug!("Output filename {}", output_filename);
     output_filename
 }
 
 fn default_filename(command: &TargetFormat) -> String {
-    let (filename, extension) = match command {
-        TargetFormat::Properties { filename, .. } => (filename, "properties".to_string()),
-        TargetFormat::Json { filename, .. } => (filename, "json".to_string()),
-        TargetFormat::Yaml { filename, .. } => (filename, "yaml".to_string()),
+    let (path_buf, extension) = match command {
+        TargetFormat::Properties { file, .. } => (file, "properties".to_string()),
+        TargetFormat::Json { file, .. } => (file, "json".to_string()),
+        TargetFormat::Yaml { file, .. } => (file, "yaml".to_string()),
     };
-    let filename = Path::new(filename).file_stem().unwrap().to_str().unwrap();
+    let mut filename = path_buf.to_str().unwrap();
+
+    // stdin
+    if path_buf == &PathBuf::from("-") {
+        filename = "stdin";
+    }
     return [filename, ".", extension.to_string().to_lowercase().as_str()].concat();
 }

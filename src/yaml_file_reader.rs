@@ -1,6 +1,4 @@
-use std::fs::File;
-use std::io::Read;
-
+use log::info;
 use serde_yaml::Value;
 
 use crate::args::Args;
@@ -14,17 +12,8 @@ mod yaml_file_reader_test;
 
 pub struct YamlFileReader {}
 impl YamlFileReader {
-    pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
-        let filename = args.target_format.filename();
-        let mut file = File::open(filename).map_err(|_| ConfigFileError {
-            message: "Cannot open file".to_string(),
-        })?;
-
-        let mut content = String::new();
-        file.read_to_string(&mut content)
-            .map_err(|_| ConfigFileError {
-                message: "Cannot read from file".to_string(),
-            })?;
+    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ConfigFileError> {
+        info!("Use YamlFileReader");
         let yaml_value: Value = serde_yaml::from_str(&content).map_err(|_| ConfigFileError {
             message: "Wrong yaml format".to_string(),
         })?;

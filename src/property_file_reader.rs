@@ -1,12 +1,6 @@
-use std::{
-    collections::HashMap,
-    fmt::Display,
-    fs::File,
-    io::{BufRead, BufReader},
-    str::FromStr,
-};
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-use log::{debug, trace};
+use log::{debug, info, trace};
 
 use crate::args::Args;
 use crate::errors::ConfigFileError;
@@ -60,15 +54,12 @@ pub struct PropertyFileReader {
     pub(crate) last_key: String,
 }
 
+// todo check if lib is available for this. dotproperties crate?
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
-        let filename = &args.target_format.filename();
-        let file = File::open(filename).map_err(|_| ConfigFileError {
-            message: "Cannot open file".to_string(),
-        })?;
-
-        let config_file = Self::read_lines(args, file);
+    pub fn parse(args: &Args, content: &String) -> Result<Nodes, ConfigFileError> {
+        info!("Use PropertyFileReader");
+        let config_file = Self::read_lines(args, &content);
         Self::convert_property_to_nodes(&config_file)
     }
     fn convert_property_to_nodes(
@@ -102,6 +93,16 @@ impl PropertyFileReader {
         Ok(yaml_nodes)
     }
 
+    fn read_lines(args: &Args, content: &String) -> PropertyFileReader {
+        let mut config_file = PropertyFileReader::new();
+        let mut line_number = 1;
+        let delimiter = &args.target_format.delimiter();
+        for line in content.split("\n") {
+            config_file.process_line(line, line_number, &delimiter.unwrap());
+            line_number = line_number + 1;
+        }
+        config_file
+    }
     pub fn create_child_nodes(node: &mut Node, parts: &mut Vec<&str>, value: &str) {
         let mut last_node = &mut *node;
         for (index, name) in parts.iter().enumerate() {
@@ -116,19 +117,6 @@ impl PropertyFileReader {
         }
     }
 
-    fn read_lines(args: &Args, file: File) -> PropertyFileReader {
-        let reader = BufReader::new(file);
-        let mut config_file = PropertyFileReader::new();
-        let mut line_number = 1;
-        let delimiter = &args.target_format.delimiter();
-        for result_line in reader.lines() {
-            let line = result_line.unwrap();
-            config_file.process_line(line, line_number, &delimiter.unwrap());
-            line_number = line_number + 1;
-        }
-        config_file
-    }
-
     fn new() -> PropertyFileReader {
         PropertyFileReader {
             content: HashMap::new(),
@@ -136,7 +124,7 @@ impl PropertyFileReader {
         }
     }
 
-    fn process_line(&mut self, line: String, line_number: u32, delimiter: &Delimiter) {
+    fn process_line(&mut self, line: &str, line_number: u32, delimiter: &Delimiter) {
         // case empty lines
         if line.is_empty() {
             return;
@@ -157,7 +145,7 @@ impl PropertyFileReader {
         // case empty key if delimiter cannot split or multiline part 2...
         if key.is_empty() {
             if self.content.contains_key(&self.last_key) {
-                self.add_multiline(&line);
+                self.add_multiline(line);
                 return;
             }
             self.add(&line, value, line_number);
@@ -179,7 +167,7 @@ impl PropertyFileReader {
         return self.content.insert(line.key.clone(), line.clone());
     }
 
-    fn add_multiline(&mut self, line: &String) {
+    fn add_multiline(&mut self, line: &str) {
         // get last line
         let previous_line = self.content.get_mut(&self.last_key).unwrap();
         previous_line.add_multiline(line);

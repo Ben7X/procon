@@ -304,6 +304,7 @@ dependencies = [
     "debug-ignore",
     "env_logger",
     "exitcode",
+    "is-terminal",
     "json",
     "linked-hash-map",
     "log",
