@@ -13,46 +13,49 @@ use crate::property_file_reader::Delimiter;
     about,
     long_about = "Procon (Pro)perty (Con)verter \
     \nA program to convert between different property formats.
+    \nExamples:
     \nProperty -> Json
+    \n\tprocon json example.properties
     \nProperty -> Yaml
-    \nJson -> Property
-    \nJson -> Yaml
-    \nYaml -> Property *not yet implemented
-    \nYaml-> Yaml *not yet implemented
+    \n\tprocon yaml example.properties
+    \nJson -> Properties
+    \n\tprocon properties example.json
     "
 )]
+#[command(propagate_version = true)]
 pub struct Args {
     #[command(subcommand)]
     pub target_format: TargetFormat,
 
     /// Dry run
     ///
-    /// Prints the converted format to the console
-    /// This option is mutual exclusive with the --output-filename option.
+    /// Only prints the converted format to the console
+    ///
+    /// This option is mutual exclusive with the -o --output-filename option
     #[arg(short, long, default_value_t = false)]
     pub dry_run: bool,
 
-    /// Flag to specify pipe in bytes are in property file format
+    /// Flag to specifying stdin bytes to be processed as properties
     ///
-    /// If data piped in via stdin, what is the file format
+    /// Format of stdin bytes
     #[arg(short = 'p', long)]
     pub from_property_file: bool,
 
-    /// Flag to specify pipe in bytes are in yaml file format
+    /// Flag to specifying stdin bytes to be processed as yaml
     ///
-    /// If data piped in via stdin, what is the file format
+    /// Format of stdin bytes
     #[arg(short = 'y', long)]
     pub from_yaml_file: bool,
 
-    /// Flag to specify pipe in bytes are in json file format
+    /// Flag to specifying stdin bytes to be processed as json
     ///
-    /// If data piped in via stdin, what is the file format
+    /// Format of stdin bytes
     #[arg(short = 'j', long)]
     pub from_json_file: bool,
 
-    /// File to write the converted format to the console
+    /// File to write the converted format to
     ///
-    /// This option is mutual exclusive with the --dry-run option.
+    /// This option is mutual exclusive with the -d --dry-run option.
     #[arg(short, long)]
     pub output_filename: Option<String>,
 
@@ -62,30 +65,18 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum TargetFormat {
-    /// Property format to convert to: Properties file
+    /// Target format properties
     Properties {
         /// Property delimiter
         ///
         /// only used in combination with properties command
         #[arg(short, long, default_value_t = Delimiter::Equals)]
         property_delimiter: Delimiter,
-        /// Path of the file to convert
+        /// Input file
         file: PathBuf,
     },
 
-    /// Property format to convert to: Json
-    Json {
-        /// Property delimiter
-        ///
-        /// only used in combination with properties command
-        #[arg(short, long, default_value_t = Delimiter::Equals)]
-        property_delimiter: Delimiter,
-
-        /// Path of the file to convert
-        file: PathBuf,
-    },
-
-    /// Property format to convert to: Yaml
+    /// Target format yaml
     Yaml {
         /// Property delimiter
         ///
@@ -93,7 +84,19 @@ pub enum TargetFormat {
         #[arg(short, long, default_value_t = Delimiter::Equals)]
         property_delimiter: Delimiter,
 
-        /// Path of the file to convert
+        /// Input file
+        file: PathBuf,
+    },
+
+    /// Target format json
+    Json {
+        /// Property delimiter
+        ///
+        /// only used in combination with properties command
+        #[arg(short, long, default_value_t = Delimiter::Equals)]
+        property_delimiter: Delimiter,
+
+        /// Input file
         file: PathBuf,
     },
 }

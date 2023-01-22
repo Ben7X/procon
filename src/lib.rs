@@ -10,7 +10,7 @@ use crate::args::{Args, TargetFormat};
 use crate::errors::ProconError;
 use crate::json_file_reader::JsonFileReader;
 use crate::nodes::Nodes;
-use crate::nodes_converter::{to_json, to_properties, to_yaml};
+use crate::nodes_writer::{to_json, to_properties, to_yaml};
 use crate::property_file_reader::PropertyFileReader;
 use crate::yaml_file_reader::YamlFileReader;
 
@@ -20,7 +20,8 @@ pub mod json_file_reader;
 pub mod line;
 pub mod node;
 pub mod nodes;
-pub mod nodes_converter;
+pub mod nodes_writer;
+pub mod nodes_writer_test;
 pub mod property_file_reader;
 pub mod yaml_file_reader;
 

@@ -11,8 +11,8 @@ use crate::errors::ProconError;
 use crate::nodes::Nodes;
 
 #[cfg(test)]
-#[path = "./nodes_converter_test.rs"]
-mod nodes_converter_test;
+#[path = "./nodes_writer_test.rs"]
+mod nodes_writer_test;
 
 pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String, ProconError> {
     let mut content = String::new();
@@ -87,7 +87,7 @@ fn output_content(args: &Args, content: String) -> Result<String, ProconError> {
     }
 }
 
-fn determine_output_filename(args: &Args) -> String {
+pub(crate) fn determine_output_filename(args: &Args) -> String {
     let output_filename: String;
     if args.output_filename.is_some() {
         output_filename = args.output_filename.as_ref().unwrap().to_string();
@@ -99,13 +99,13 @@ fn determine_output_filename(args: &Args) -> String {
     output_filename
 }
 
-fn default_filename(command: &TargetFormat) -> String {
+pub(crate) fn default_filename(command: &TargetFormat) -> String {
     let (path_buf, extension) = match command {
         TargetFormat::Properties { file, .. } => (file, "properties".to_string()),
         TargetFormat::Json { file, .. } => (file, "json".to_string()),
         TargetFormat::Yaml { file, .. } => (file, "yaml".to_string()),
     };
-    let mut filename = path_buf.to_str().unwrap();
+    let mut filename = path_buf.file_stem().unwrap().to_str().unwrap();
 
     // stdin
     if path_buf == &PathBuf::from("-") {

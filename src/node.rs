@@ -92,7 +92,6 @@ pub struct Node {
     pub value: NodeType,
 }
 
-#[allow(dead_code)]
 impl Node {
     fn new(
         level: usize,

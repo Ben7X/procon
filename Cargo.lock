@@ -8,7 +8,7 @@ version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc936419f96fa211c1b9166887b38e5e40b19958e5b895be7c1f93adec7071ac"
 dependencies = [
-    "memchr",
+ "memchr",
 ]
 
 [[package]]
@@ -47,13 +47,13 @@ version = "4.0.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7db700bc935f9e43e88d00b0850dae18a63773cfbec6d8e070fccf7fef89a39"
 dependencies = [
-    "bitflags",
-    "clap_derive",
-    "clap_lex",
-    "is-terminal",
-    "once_cell",
-    "strsim",
-    "termcolor",
+ "bitflags",
+ "clap_derive",
+ "clap_lex",
+ "is-terminal",
+ "once_cell",
+ "strsim",
+ "termcolor",
 ]
 
 [[package]]
@@ -62,8 +62,8 @@ version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23e2b6c3dcdb73299f48ae05b294da14e2f560b3ed2c09e742269eb1b22af231"
 dependencies = [
-    "clap",
-    "log",
+ "clap",
+ "log",
 ]
 
 [[package]]
@@ -72,11 +72,11 @@ version = "4.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0177313f9f02afc995627906bbd8967e2be069f5261954222dac78290c2b9014"
 dependencies = [
-    "heck",
-    "proc-macro-error",
-    "proc-macro2",
-    "quote",
-    "syn",
+ "heck",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -110,11 +110,11 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
 dependencies = [
-    "humantime",
-    "is-terminal",
-    "log",
-    "regex",
-    "termcolor",
+ "humantime",
+ "is-terminal",
+ "log",
+ "regex",
+ "termcolor",
 ]
 
 [[package]]
@@ -297,21 +297,21 @@ dependencies = [
 name = "procon"
 version = "0.2.4"
 dependencies = [
-    "anyhow",
-    "clap",
-    "clap-verbosity-flag",
-    "clap_mangen",
-    "debug-ignore",
-    "env_logger",
-    "exitcode",
-    "is-terminal",
-    "json",
-    "linked-hash-map",
-    "log",
-    "serde",
-    "serde_json",
-    "serde_yaml",
-    "yaml-rust",
+ "anyhow",
+ "clap",
+ "clap-verbosity-flag",
+ "clap_mangen",
+ "debug-ignore",
+ "env_logger",
+ "exitcode",
+ "is-terminal",
+ "json",
+ "linked-hash-map",
+ "log",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "yaml-rust",
 ]
 
 [[package]]
@@ -329,9 +329,9 @@ version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48aaa5748ba571fb95cd2c85c09f629215d3a6ece942baa100950af03a34f733"
 dependencies = [
-    "aho-corasick",
-    "memchr",
-    "regex-syntax",
+ "aho-corasick",
+ "memchr",
+ "regex-syntax",
 ]
 
 [[package]]

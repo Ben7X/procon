@@ -1,4 +1,6 @@
-use log::LevelFilter;
+use std::path::PathBuf;
+
+use clap_verbosity_flag::Verbosity;
 
 use procon::args::{Args, TargetFormat};
 use procon::node::Node;
@@ -10,11 +12,14 @@ pub fn create_args(delimiter: Delimiter, filename: &str) -> Args {
     let args: Args = Args {
         target_format: TargetFormat::Json {
             property_delimiter: delimiter,
-            filename: filename.to_string(),
+            file: PathBuf::from(filename),
         },
         dry_run: false,
-        log_level: LevelFilter::Off,
+        from_property_file: false,
+        from_yaml_file: false,
+        from_json_file: false,
         output_filename: None,
+        verbose: Verbosity::new(0, 0),
     };
     args
 }
@@ -26,7 +31,6 @@ pub fn parse_test_file(delimiter: Delimiter, filename: &str) -> Nodes {
     nodes
 }
 
-#[allow(dead_code)]
 pub fn assert_node(node: &Node, name: String, value: String) {
     assert_eq!(name, node.name);
     assert_eq!(value, node.value.to_string());
