@@ -2,7 +2,7 @@ use log::info;
 use serde_yaml::Value;
 
 use crate::args::Args;
-use crate::errors::ConfigFileError;
+use crate::errors::ProconError;
 use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
 
@@ -12,15 +12,15 @@ mod yaml_file_reader_test;
 
 pub struct YamlFileReader {}
 impl YamlFileReader {
-    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ConfigFileError> {
+    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ProconError> {
         info!("Use YamlFileReader");
-        let yaml_value: Value = serde_yaml::from_str(&content).map_err(|_| ConfigFileError {
+        let yaml_value: Value = serde_yaml::from_str(&content).map_err(|_| ProconError {
             message: "Wrong yaml format".to_string(),
         })?;
 
         Self::convert_yaml_values_to_nodes(&yaml_value)
     }
-    fn convert_yaml_values_to_nodes(yaml_value: &Value) -> Result<Nodes, ConfigFileError> {
+    fn convert_yaml_values_to_nodes(yaml_value: &Value) -> Result<Nodes, ProconError> {
         let mut nodes: Nodes = Nodes::new();
         match yaml_value {
             Value::Mapping(ref obj) => {

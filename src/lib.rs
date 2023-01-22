@@ -7,7 +7,7 @@ use is_terminal::IsTerminal as _;
 use log::{debug, info};
 
 use crate::args::{Args, TargetFormat};
-use crate::errors::ConfigFileError;
+use crate::errors::ProconError;
 use crate::json_file_reader::JsonFileReader;
 use crate::nodes::Nodes;
 use crate::nodes_converter::{to_json, to_properties, to_yaml};
@@ -24,7 +24,7 @@ pub mod nodes_converter;
 pub mod property_file_reader;
 pub mod yaml_file_reader;
 
-pub fn run() -> Result<String, ConfigFileError> {
+pub fn run() -> Result<String, ProconError> {
     let args: Args = parse_args_and_setup_logger()?;
 
     env_logger::Builder::new()
@@ -42,22 +42,22 @@ pub fn run() -> Result<String, ConfigFileError> {
     convert_nodes(&args, &nodes)
 }
 
-fn parse_args_and_setup_logger() -> Result<Args, ConfigFileError> {
+fn parse_args_and_setup_logger() -> Result<Args, ProconError> {
     let args = Args::parse();
     debug!("{:?}", args);
     Ok(args)
 }
 
-fn validate_args(args: &Args) -> Result<(), ConfigFileError> {
+fn validate_args(args: &Args) -> Result<(), ProconError> {
     if args.dry_run && args.output_filename.is_some() {
-        return Err(ConfigFileError {
+        return Err(ProconError {
             message: "Option -d and -o are mutual exclusive".to_string(),
         });
     }
     Ok(())
 }
 
-pub fn parse_input_file(args: &Args) -> Result<Nodes, ConfigFileError> {
+pub fn parse_input_file(args: &Args) -> Result<Nodes, ProconError> {
     debug!("\n####################################\nLoad property files\n####################################");
     let content: String = read_file_or_stdin(&args)?;
     return if args.target_format.path_buf() == &PathBuf::from("-") {
@@ -67,7 +67,7 @@ pub fn parse_input_file(args: &Args) -> Result<Nodes, ConfigFileError> {
     };
 }
 
-fn read_file_or_stdin(args: &Args) -> Result<String, ConfigFileError> {
+fn read_file_or_stdin(args: &Args) -> Result<String, ProconError> {
     let mut content = String::new();
     let count;
 
@@ -75,14 +75,14 @@ fn read_file_or_stdin(args: &Args) -> Result<String, ConfigFileError> {
     let path_buf = args.target_format.path_buf();
     if path_buf == &PathBuf::from("-") {
         if stdin().is_terminal() {
-            return Err(ConfigFileError {
+            return Err(ProconError {
                 message: "Wrong use of pipe".to_string(),
             });
         }
         let mut buffer = BufReader::new(stdin().lock());
         count = buffer.read_to_string(&mut content);
     } else {
-        let file = File::open(&path_buf).map_err(|_| ConfigFileError {
+        let file = File::open(&path_buf).map_err(|_| ProconError {
             message: "Unable to read file".to_string(),
         })?;
         let mut buffer = BufReader::new(file);
@@ -96,7 +96,7 @@ fn read_file_or_stdin(args: &Args) -> Result<String, ConfigFileError> {
 fn try_reader_from_flag_or_all_sequential(
     args: &Args,
     content: &String,
-) -> Result<Nodes, ConfigFileError> {
+) -> Result<Nodes, ProconError> {
     if args.from_property_file {
         return PropertyFileReader::parse(&args, &content);
     }
@@ -109,7 +109,7 @@ fn try_reader_from_flag_or_all_sequential(
     try_all_readers(&args, &content)
 }
 
-fn try_all_readers(args: &Args, content: &String) -> Result<Nodes, ConfigFileError> {
+fn try_all_readers(args: &Args, content: &String) -> Result<Nodes, ProconError> {
     info!("Guess input file");
     let json_nodes = JsonFileReader::parse(&args, &content);
     if json_nodes.is_ok() {
@@ -127,7 +127,7 @@ fn try_all_readers(args: &Args, content: &String) -> Result<Nodes, ConfigFileErr
     Ok(Nodes::new())
 }
 
-fn find_parser_via_extension(args: &Args, content: &String) -> Result<Nodes, ConfigFileError> {
+fn find_parser_via_extension(args: &Args, content: &String) -> Result<Nodes, ProconError> {
     let extension: &str = &args
         .target_format
         .path_buf()
@@ -141,7 +141,7 @@ fn find_parser_via_extension(args: &Args, content: &String) -> Result<Nodes, Con
         "yml" => YamlFileReader::parse(&args, &content),
         "yaml" => YamlFileReader::parse(&args, &content),
         "json" => JsonFileReader::parse(&args, &content),
-        &_ => Err(ConfigFileError {
+        &_ => Err(ProconError {
             message: "Not supported file type:\n\t*.properties\n\t*.json\n\t*.yaml".to_string(),
         }),
     }?;
@@ -150,7 +150,7 @@ fn find_parser_via_extension(args: &Args, content: &String) -> Result<Nodes, Con
     Ok(nodes)
 }
 
-fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<String, ConfigFileError> {
+fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<String, ProconError> {
     debug!("\n####################################\nStart format conversion\n####################################");
     match args.target_format {
         TargetFormat::Properties { .. } => {

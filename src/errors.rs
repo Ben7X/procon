@@ -1,10 +1,10 @@
 use std::fmt::{Display, Formatter};
 #[derive(Debug)]
-pub struct ConfigFileError {
+pub struct ProconError {
     pub message: String,
 }
 
-impl Display for ConfigFileError {
+impl Display for ProconError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.message)
     }

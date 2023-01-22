@@ -2,21 +2,21 @@ use log::{debug, error, info};
 use serde_json::Value;
 
 use crate::args::Args;
-use crate::errors::ConfigFileError;
+use crate::errors::ProconError;
 use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
 
 pub struct JsonFileReader {}
 
 impl JsonFileReader {
-    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ConfigFileError> {
+    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ProconError> {
         info!("Use JsonFileReader");
-        let json_data: Value = serde_json::from_str(&content).map_err(|_| ConfigFileError {
+        let json_data: Value = serde_json::from_str(&content).map_err(|_| ProconError {
             message: "Unable to parse".to_string(),
         })?;
         Self::convert_json_values_to_nodes(&json_data)
     }
-    fn convert_json_values_to_nodes(json_data: &Value) -> Result<Nodes, ConfigFileError> {
+    fn convert_json_values_to_nodes(json_data: &Value) -> Result<Nodes, ProconError> {
         let mut nodes: Nodes = Nodes::new();
         match json_data {
             Value::Object(ref obj) => {
