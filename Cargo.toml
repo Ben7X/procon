@@ -1,13 +1,13 @@
 [package]
 name = "procon"
 authors = ["sbrfs77"]
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 license = "Apache-2.0"
 description = "Procon (Pro)perty (Con)verter \nA program to convert between different property formats."
 repository = "https://github.com/Ben7X/procon"
 readme = "README.md"
-keywords = ["property_file", "yaml", "yml", "json", "conversion"]
+keywords = ["procon", "property_file", "yaml", "json", "conversion"]
 categories = ["command-line-utilities", "development-tools"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

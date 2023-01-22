@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::path::PathBuf;
 
+use clap::ArgGroup;
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::Verbosity;
 
@@ -23,6 +24,14 @@ use crate::property_file_reader::Delimiter;
     "
 )]
 #[command(propagate_version = true)]
+#[command(group(ArgGroup::new("from")
+.multiple(false)
+.args(["from_property_file", "from_yaml_file", "from_json_file"]),
+))]
+#[command(group(ArgGroup::new("dry-run")
+.multiple(false)
+.args(["dry_run", "output_filename"]),
+))]
 pub struct Args {
     #[command(subcommand)]
     pub target_format: TargetFormat,

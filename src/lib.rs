@@ -33,8 +33,6 @@ pub fn run() -> Result<String, ProconError> {
         .init();
     debug!("Setup logger");
 
-    validate_args(&args)?;
-
     if stdin().is_terminal() {
         debug!("User: terminal");
     }
@@ -47,15 +45,6 @@ fn parse_args_and_setup_logger() -> Result<Args, ProconError> {
     let args = Args::parse();
     debug!("{:?}", args);
     Ok(args)
-}
-
-fn validate_args(args: &Args) -> Result<(), ProconError> {
-    if args.dry_run && args.output_filename.is_some() {
-        return Err(ProconError {
-            message: "Option -d and -o are mutual exclusive".to_string(),
-        });
-    }
-    Ok(())
 }
 
 pub fn parse_input_file(args: &Args) -> Result<Nodes, ProconError> {
@@ -77,7 +66,7 @@ fn read_file_or_stdin(args: &Args) -> Result<String, ProconError> {
     if path_buf == &PathBuf::from("-") {
         if stdin().is_terminal() {
             return Err(ProconError {
-                message: "Wrong use of pipe".to_string(),
+                message: "Nothing piped into stdin".to_string(),
             });
         }
         let mut buffer = BufReader::new(stdin().lock());
