@@ -1,17 +1,11 @@
-use std::{
-    collections::HashMap,
-    fmt::Display,
-    fs::File,
-    io::{BufRead, BufReader},
-    str::FromStr,
-};
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-use log::debug;
+use log::{debug, info, trace};
 
 use crate::args::Args;
-use crate::errors::ConfigFileError;
+use crate::errors::ProconError;
 use crate::line::Line;
-use crate::node::Node;
+use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
 
 #[cfg(test)]
@@ -56,51 +50,69 @@ impl FromStr for Delimiter {
 
 #[derive(Debug)]
 pub struct PropertyFileReader {
-    content: HashMap<String, Line>,
-    last_key: String,
+    pub(crate) content: HashMap<String, Line>,
+    pub(crate) last_key: String,
 }
 
+// todo check if lib is available for this. dotproperties crate?
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(args: &Args) -> Result<Nodes, ConfigFileError> {
-        let filename = &args.target_format.filename();
-        let file = File::open(filename).map_err(|_| ConfigFileError {
-            message: "Cannot open file".to_string(),
-        })?;
-        let reader = BufReader::new(file);
-
-        Self::convert_property_to_nodes(&args, filename, reader)
+    pub fn parse(args: &Args, content: &String) -> Result<Nodes, ProconError> {
+        info!("Use PropertyFileReader");
+        let config_file = Self::read_lines(args, &content);
+        Self::convert_property_to_nodes(&config_file)
     }
-
-    fn convert_property_to_nodes(
-        args: &&Args,
-        filename: &String,
-        reader: BufReader<File>,
-    ) -> Result<Nodes, ConfigFileError> {
-        let mut config_file = PropertyFileReader::new();
-        let mut line_number = 1;
-        let delimiter = &args.target_format.delimiter();
-        for result_line in reader.lines() {
-            let line = result_line.unwrap();
-            config_file.process_line(line, line_number, &delimiter.unwrap());
-            line_number = line_number + 1;
-        }
-        debug!("Read {} successfully", filename);
-
+    fn convert_property_to_nodes(config_file: &PropertyFileReader) -> Result<Nodes, ProconError> {
         let mut yaml_nodes: Nodes = Nodes::new();
-        let mut new_node: Node;
         for (prop_key, line) in config_file.content.iter() {
             let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();
-            debug!("Node parts {:?}", node_parts);
+            trace!("Node parts: {:?}", node_parts);
             if node_parts.is_empty() {
-                debug!("Ignoring empty parts");
+                trace!("Ignore empty parts");
                 continue;
             }
-            new_node = Node::new_from_parts(&mut node_parts, &line.value);
+
+            let name = node_parts[0];
+            node_parts.remove(0);
+            let mut new_node = Node::new_from_name(name);
+
+            // case key has no sub nodes
+            if node_parts.len() == 0 {
+                new_node.value = NodeType::parse(&line.value);
+                yaml_nodes.merge(&mut new_node);
+                continue;
+            }
+
+            // create children
+            Self::create_child_nodes(&mut new_node, &mut node_parts, &line.value);
             yaml_nodes.merge(&mut new_node);
         }
 
         Ok(yaml_nodes)
+    }
+
+    fn read_lines(args: &Args, content: &String) -> PropertyFileReader {
+        let mut config_file = PropertyFileReader::new();
+        let mut line_number = 1;
+        let delimiter = &args.target_format.delimiter();
+        for line in content.split("\n") {
+            config_file.process_line(line, line_number, &delimiter.unwrap());
+            line_number = line_number + 1;
+        }
+        config_file
+    }
+    pub fn create_child_nodes(node: &mut Node, parts: &mut Vec<&str>, value: &str) {
+        let mut last_node = &mut *node;
+        for (index, name) in parts.iter().enumerate() {
+            let mut new_node = Node::new_child(index + 1, last_node, name);
+            if index == parts.len() - 1 {
+                new_node.value = NodeType::parse(value);
+            }
+
+            let children = &mut last_node.children;
+            children.push(new_node.clone());
+            last_node = &mut children[0];
+        }
     }
 
     fn new() -> PropertyFileReader {
@@ -110,7 +122,7 @@ impl PropertyFileReader {
         }
     }
 
-    fn process_line(&mut self, line: String, line_number: u32, delimiter: &Delimiter) {
+    fn process_line(&mut self, line: &str, line_number: u32, delimiter: &Delimiter) {
         // case empty lines
         if line.is_empty() {
             return;
@@ -131,7 +143,7 @@ impl PropertyFileReader {
         // case empty key if delimiter cannot split or multiline part 2...
         if key.is_empty() {
             if self.content.contains_key(&self.last_key) {
-                self.add_multiline(&line);
+                self.add_multiline(line);
                 return;
             }
             self.add(&line, value, line_number);
@@ -153,7 +165,7 @@ impl PropertyFileReader {
         return self.content.insert(line.key.clone(), line.clone());
     }
 
-    fn add_multiline(&mut self, line: &String) {
+    fn add_multiline(&mut self, line: &str) {
         // get last line
         let previous_line = self.content.get_mut(&self.last_key).unwrap();
         previous_line.add_multiline(line);

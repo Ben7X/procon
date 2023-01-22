@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use json::JsonValue;
 use linked_hash_map::LinkedHashMap;
-use log::debug;
+use log::{debug, trace};
 use yaml_rust::Yaml;
 
 #[cfg(test)]
@@ -92,7 +92,6 @@ pub struct Node {
     pub value: NodeType,
 }
 
-#[allow(dead_code)]
 impl Node {
     fn new(
         level: usize,
@@ -108,24 +107,16 @@ impl Node {
             name,
             value,
         };
-        debug!("Creating new node {:?}", node);
+        debug!("Create new node {:?}", node);
         node
-    }
-
-    pub fn new_from_name(name: &str) -> Node {
-        Self::new(0, None, Vec::new(), String::from(name), NodeType::NONE)
     }
 
     pub fn new_from_name_and_level(level: usize, name: &str) -> Node {
         Self::new(level, None, Vec::new(), String::from(name), NodeType::NONE)
     }
 
-    pub fn new_from_parts(node_parts: &mut Vec<&str>, value: &str) -> Node {
-        let name = node_parts[0];
-        node_parts.remove(0);
-        let mut new_node = Self::new(0, None, Vec::new(), String::from(name), NodeType::NONE);
-        new_node.create_child_nodes(node_parts, value);
-        new_node
+    pub fn new_from_name(name: &str) -> Node {
+        Self::new_from_name_and_level(0, name)
     }
 
     pub fn new_child(level: usize, parent: &mut Node, name: &str) -> Node {
@@ -139,9 +130,10 @@ impl Node {
     }
 
     pub fn find_common_node(&mut self, new_node: &Node) -> bool {
-        debug!(
-            "Checking node children {:?} for new node {:?}",
-            self.children, new_node.name
+        trace!(
+            "Find common node {:?} in children {:?}",
+            new_node.name,
+            self.children
         );
 
         // case not the same base node
@@ -160,7 +152,7 @@ impl Node {
             }
         }
 
-        debug!("Merge {:?} into {:?}", new_node, self);
+        trace!("Merge {:?} into {:?}", new_node, self);
         let children = &mut self.children;
         children.push(new_node.to_owned());
         return false;
@@ -173,27 +165,6 @@ impl Node {
             }
         }
         self.children.sort();
-    }
-
-    fn create_child_nodes(&mut self, parts: &mut Vec<&str>, value: &str) {
-        // case key has no sub nodes
-        if parts.len() == 0 {
-            self.value = NodeType::parse(value);
-            return;
-        }
-        // multi node key
-        let mut last_node = &mut *self;
-        for (index, name) in parts.iter().enumerate() {
-            let mut new_node = Node::new_child(index + 1, last_node, name);
-            if index == parts.len() - 1 {
-                new_node.value = NodeType::parse(value);
-            }
-
-            debug!("Create child node {:?}", new_node);
-            let children = &mut last_node.children;
-            children.push(new_node.clone());
-            last_node = &mut children[0];
-        }
     }
 }
 

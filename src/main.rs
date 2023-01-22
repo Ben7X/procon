@@ -1,13 +1,17 @@
 extern crate exitcode;
 
+use clap::CommandFactory;
+use log::{error, info};
+use procon::args::Args;
 use std::process;
 
 use procon::run;
 
 fn main() {
     let message = run().unwrap_or_else(|err| {
-        eprintln!("{}", err.to_string());
+        error!("{}", err.to_string());
+        Args::command().print_help().unwrap();
         process::exit(exitcode::CONFIG);
     });
-    println!("{}", message);
+    info!("{}", message);
 }

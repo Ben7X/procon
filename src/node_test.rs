@@ -2,6 +2,7 @@
 mod tests {
     use crate::node::NodeType::{ARRAY, NUMERIC, STRING};
     use crate::node::{Node, NodeType};
+    use crate::property_file_reader::PropertyFileReader;
 
     #[test]
     fn node_value_retrieve_type_string() {
@@ -96,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn node_value_retrieve_type_numeric_flaoting() {
+    fn node_value_retrieve_type_numeric_floating() {
         let value = "1.5";
         let node_type = NodeType::parse(value);
         match node_type {
@@ -161,9 +162,9 @@ mod tests {
 
     #[test]
     fn new_node_one_level() {
-        let mut keys = vec!["level0"];
         let value = "testvalue";
-        let node = Node::new_from_parts(&mut keys, value);
+        let mut node = Node::new_from_name("level0");
+        node.value = NodeType::parse(value);
 
         assert_eq!("level0", node.name);
         assert_eq!(NodeType::parse(value), node.value);
@@ -172,9 +173,9 @@ mod tests {
 
     #[test]
     fn new_node_no_value() {
-        let mut keys = vec!["level0"];
         let value = "";
-        let node = Node::new_from_parts(&mut keys, value);
+        let mut node = Node::new_from_name("level0");
+        node.value = NodeType::parse(value);
 
         assert_eq!("level0", node.name);
         assert_eq!(NodeType::parse(value), node.value);
@@ -183,9 +184,10 @@ mod tests {
 
     #[test]
     fn new_node_multiple_level() {
-        let mut keys = vec!["level0", "level1", "level2"];
+        let mut keys = vec!["level1", "level2"];
         let value = "testvalue";
-        let node = Node::new_from_parts(&mut keys, value);
+        let mut node = Node::new_from_name("level0");
+        PropertyFileReader::create_child_nodes(&mut node, &mut keys, value);
 
         assert_eq!(NodeType::NONE, node.value);
         assert_eq!("level0", node.name);
@@ -204,14 +206,20 @@ mod tests {
 
     #[test]
     fn find_common_node_same_base_level() {
-        let mut keys = vec!["level0", "level1", "level2"];
+        let mut keys = vec!["level1", "level2"];
         let value = "test1";
-        let mut node = Node::new_from_parts(&mut keys, value);
-        let mut keys2 = vec!["level0", "level1", "otherLevel"];
+        // let mut node = Node::new_from_parts(&mut keys, value);
+        let mut node = Node::new_from_name("level0");
+        PropertyFileReader::create_child_nodes(&mut node, &mut keys, value);
+
+        let mut keys2 = vec!["level1", "otherLevel"];
         let value2 = "test2";
-        let node2 = Node::new_from_parts(&mut keys2, value2);
+        // let node2 = Node::new_from_parts(&mut keys2, value2);
+        let mut node2 = Node::new_from_name("level0");
+        PropertyFileReader::create_child_nodes(&mut node2, &mut keys2, value2);
 
         let to_add = node.find_common_node(&node2);
+        println!("{}", to_add);
         assert!(!to_add);
 
         // base level
@@ -236,10 +244,15 @@ mod tests {
     fn find_common_node_different_base_level() {
         let mut keys = vec!["level0", "level1", "level2"];
         let value = "test1";
-        let mut node = Node::new_from_parts(&mut keys, value);
+        // et mut node = Node::new_from_parts(&mut keys, value);
+        let mut node = Node::new_from_name(value);
+        PropertyFileReader::create_child_nodes(&mut node, &mut keys, value);
+
         let mut keys2 = vec!["otherLevel", "level1", "level2"];
         let value2 = "test2";
-        let node2 = Node::new_from_parts(&mut keys2, value2);
+        // let node2 = Node::new_from_parts(&mut keys2, value2);
+        let mut node2 = Node::new_from_name(value2);
+        PropertyFileReader::create_child_nodes(&mut node2, &mut keys2, value2);
 
         let to_add = node.find_common_node(&node2);
         assert!(to_add)
@@ -249,7 +262,10 @@ mod tests {
     fn into_json() {
         let mut keys = vec!["level0", "level1", "level2"];
         let value = "test1";
-        let node = Node::new_from_parts(&mut keys, value);
+        // let node = Node::new_from_parts(&mut keys, value);
+        let mut node = Node::new_from_name(value);
+        PropertyFileReader::create_child_nodes(&mut node, &mut keys, value);
+
         let data = json::stringify(&node);
         println!("{}", data);
     }
@@ -303,20 +319,22 @@ mod tests {
 
     #[test]
     fn into_property_string() {
-        let node: &Node = &Node::new_from_parts(&mut vec!["test", "test2"], "value");
-        let expected_value = "test.test2=value\n";
+        let mut node = Node::new_from_name("test");
+        PropertyFileReader::create_child_nodes(&mut node, &mut vec!["test2"], "value");
 
-        let property_representation: String = node.into();
-        assert_eq!(expected_value, property_representation);
+        let test_node = &node.to_owned();
+        let property_representation: String = test_node.into();
+        assert_eq!("test.test2=value\n", property_representation);
     }
 
     #[test]
     fn into_property_none() {
-        let mut node: Node = Node::new_from_parts(&mut vec!["test", "test2"], "value");
-        node.value = NodeType::NONE;
-        let expected_value = "test.test2=value\n";
+        // let mut node: Node = Node::new_from_parts(&mut vec!["test", "test2"], "value");
+        let mut node = Node::new_from_name("test");
+        PropertyFileReader::create_child_nodes(&mut node, &mut vec!["test2"], "value");
 
-        let property_representation: String = (&node).into();
-        assert_eq!(expected_value, property_representation);
+        let test_node = &node.to_owned();
+        let property_representation: String = test_node.into();
+        assert_eq!("test.test2=value\n", property_representation);
     }
 }
