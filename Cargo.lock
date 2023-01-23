@@ -295,17 +295,17 @@ dependencies = [
 
 [[package]]
 name = "procon"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
-    "anyhow",
-    "clap",
-    "clap-verbosity-flag",
-    "clap_mangen",
-    "debug-ignore",
-    "env_logger",
-    "exitcode",
-    "is-terminal",
-    "json",
+ "anyhow",
+ "clap",
+ "clap-verbosity-flag",
+ "clap_mangen",
+ "debug-ignore",
+ "env_logger",
+ "exitcode",
+ "is-terminal",
+ "json",
  "linked-hash-map",
  "log",
  "serde",
