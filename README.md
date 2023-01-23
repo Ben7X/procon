@@ -51,6 +51,10 @@ cat test.json | procon -j yaml -
 
 # Releases
 
+## 0.2.6
+
+- add github pipeline badge
+ 
 ## 0.2.5
 
 - change log4rs for env_logger
