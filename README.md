@@ -8,6 +8,7 @@ At work, I was looking for a tool to convert a java property file into a yaml fo
 That's being said I am a noob when it comes to rust development. So please be nice 😁
 
 # Current state
+![Rust project pipeline](https://github.com/Ben7X/procon/actions/workflows/rust.yml/badge.svg)
 
 ## General
 
@@ -26,13 +27,14 @@ That's being said I am a noob when it comes to rust development. So please be ni
 
 # How to use
 
-## convert test.properties file to json
+- convert test.properties file to json
 
 ```shell
 procon json test.properties
 ```
 
-## convert stdout as input for procon, -y flag defines the property format of stdin bytes as json
+- convert stdout as input for procon
+- the -j flag defines the property format of stdin bytes as json, -y yaml, -p property
 
 ```shell
 cat test.json | procon -j yaml -
