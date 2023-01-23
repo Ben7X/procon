@@ -53,7 +53,7 @@ cat test.json | procon -j yaml -
 
 ## 0.2.6
 
-- add github pipeline badge
+- add GitHub pipeline badge
  
 ## 0.2.5
 
