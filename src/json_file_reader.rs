@@ -1,4 +1,5 @@
-use log::{debug, error, info};
+use anyhow::{bail, Context, Result};
+use log::{debug, info};
 use serde_json::Value;
 
 use crate::args::Args;
@@ -9,14 +10,14 @@ use crate::nodes::Nodes;
 pub struct JsonFileReader {}
 
 impl JsonFileReader {
-    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ProconError> {
+    pub fn parse(_args: &Args, content: &String) -> Result<Nodes> {
         info!("Use JsonFileReader");
-        let json_data: Value = serde_json::from_str(&content).map_err(|_| ProconError {
-            message: "Unable to parse".to_string(),
+        let json_data: Value = serde_json::from_str(&content).with_context(|| ProconError {
+            message: "Wrong json format".to_string(),
         })?;
         Self::convert_json_values_to_nodes(&json_data)
     }
-    fn convert_json_values_to_nodes(json_data: &Value) -> Result<Nodes, ProconError> {
+    fn convert_json_values_to_nodes(json_data: &Value) -> Result<Nodes> {
         let mut nodes: Nodes = Nodes::new();
         match json_data {
             Value::Object(ref obj) => {
@@ -34,7 +35,7 @@ impl JsonFileReader {
                 parent.value = NodeType::ARRAY(children);
                 nodes.merge(&mut parent);
             }
-            _ => error!("not valid json"),
+            _ => bail!("Not valid json"),
         };
         Ok(nodes)
     }

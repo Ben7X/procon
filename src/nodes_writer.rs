@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
+use anyhow::Result;
 use linked_hash_map::LinkedHashMap;
 use log::debug;
 use yaml_rust::{Yaml, YamlEmitter};
@@ -14,7 +15,8 @@ use crate::nodes::Nodes;
 #[path = "./nodes_writer_test.rs"]
 mod nodes_writer_test;
 
-pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String, ProconError> {
+pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String> {
+    debug!("Convert to yaml");
     let mut content = String::new();
     let mut emitter = YamlEmitter::new(&mut content);
 
@@ -44,7 +46,8 @@ pub fn to_yaml(args: &Args, nodes: &Nodes) -> Result<String, ProconError> {
     output_content(&args, content)
 }
 
-pub fn to_json(args: &Args, nodes: &Nodes) -> Result<String, ProconError> {
+pub fn to_json(args: &Args, nodes: &Nodes) -> Result<String> {
+    debug!("Convert to json");
     let mut json_data = json::JsonValue::new_object();
     for node in nodes.iter() {
         // root list treatment
@@ -57,7 +60,8 @@ pub fn to_json(args: &Args, nodes: &Nodes) -> Result<String, ProconError> {
     output_content(&args, json_data.pretty(1))
 }
 
-pub fn to_properties(args: &Args, nodes: &Nodes) -> Result<String, ProconError> {
+pub fn to_properties(args: &Args, nodes: &Nodes) -> Result<String> {
+    debug!("Convert to properties");
     let mut string_content = "".to_string();
     for node in nodes.iter() {
         let content: String = node.into();
@@ -66,7 +70,7 @@ pub fn to_properties(args: &Args, nodes: &Nodes) -> Result<String, ProconError> 
     output_content(&args, string_content)
 }
 
-fn output_content(args: &Args, content: String) -> Result<String, ProconError> {
+fn output_content(args: &Args, content: String) -> Result<String> {
     println!("{}", content);
     if args.dry_run {
         Ok(String::from("Print converted format to console"))

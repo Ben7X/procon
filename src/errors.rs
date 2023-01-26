@@ -1,5 +1,8 @@
 use std::fmt::{Display, Formatter};
-#[derive(Debug)]
+
+use thiserror::Error;
+
+#[derive(Error, Debug)]
 pub struct ProconError {
     pub message: String,
 }

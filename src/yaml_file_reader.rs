@@ -1,3 +1,4 @@
+use anyhow::{bail, Context, Result};
 use log::info;
 use serde_yaml::Value;
 
@@ -12,15 +13,15 @@ mod yaml_file_reader_test;
 
 pub struct YamlFileReader {}
 impl YamlFileReader {
-    pub fn parse(_args: &Args, content: &String) -> Result<Nodes, ProconError> {
+    pub fn parse(_args: &Args, content: &String) -> Result<Nodes> {
         info!("Use YamlFileReader");
-        let yaml_value: Value = serde_yaml::from_str(&content).map_err(|_| ProconError {
+        let yaml_value: Value = serde_yaml::from_str(&content).with_context(|| ProconError {
             message: "Wrong yaml format".to_string(),
         })?;
 
         Self::convert_yaml_values_to_nodes(&yaml_value)
     }
-    fn convert_yaml_values_to_nodes(yaml_value: &Value) -> Result<Nodes, ProconError> {
+    fn convert_yaml_values_to_nodes(yaml_value: &Value) -> Result<Nodes> {
         let mut nodes: Nodes = Nodes::new();
         match yaml_value {
             Value::Mapping(ref obj) => {
@@ -40,7 +41,7 @@ impl YamlFileReader {
                 parent.value = NodeType::ARRAY(children);
                 nodes.merge(&mut parent);
             }
-            _ => eprintln!("not valid yaml"),
+            _ => bail!("Not valid yaml"),
         }
         Ok(nodes)
     }

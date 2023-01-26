@@ -1,9 +1,9 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
+use anyhow::{Error, Result};
 use log::{debug, info, trace};
 
 use crate::args::Args;
-use crate::errors::ProconError;
 use crate::line::Line;
 use crate::node::{Node, NodeType};
 use crate::nodes::Nodes;
@@ -57,12 +57,12 @@ pub struct PropertyFileReader {
 // todo check if lib is available for this. dotproperties crate?
 #[allow(dead_code)]
 impl PropertyFileReader {
-    pub fn parse(args: &Args, content: &String) -> Result<Nodes, ProconError> {
+    pub fn parse(args: &Args, content: &String) -> Result<Nodes, Error> {
         info!("Use PropertyFileReader");
         let config_file = Self::read_lines(args, &content);
         Self::convert_property_to_nodes(&config_file)
     }
-    fn convert_property_to_nodes(config_file: &PropertyFileReader) -> Result<Nodes, ProconError> {
+    fn convert_property_to_nodes(config_file: &PropertyFileReader) -> Result<Nodes> {
         let mut yaml_nodes: Nodes = Nodes::new();
         for (prop_key, line) in config_file.content.iter() {
             let mut node_parts = prop_key.split(".").collect::<Vec<&str>>();

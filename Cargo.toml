@@ -13,6 +13,7 @@ categories = ["command-line-utilities", "development-tools"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
+anyhow = "1.0.68"
 clap = { version = "4.0.14", features = ["derive"] }
 clap-verbosity-flag = "2.0.0"
 clap_mangen = "0.2.3"
@@ -24,6 +25,7 @@ log = "0.4.17"
 serde = "1.0.145"
 serde_json = "1.0.87"
 serde_yaml = "0.9.14"
+thiserror = "1.0.38"
 yaml-rust = "0.4.5"
 
 [dependencies]
@@ -40,4 +42,5 @@ log = "0.4.17"
 serde = "1.0.145"
 serde_json = "1.0.87"
 serde_yaml = "0.9.14"
+thiserror = "1.0.38"
 yaml-rust = "0.4.5"
