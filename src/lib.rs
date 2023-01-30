@@ -11,7 +11,7 @@ use crate::args::{Args, TargetFormat};
 use crate::errors::ProconError;
 use crate::json_file_reader::JsonFileReader;
 use crate::nodes::Nodes;
-use crate::nodes_writer::{to_json, to_properties, to_yaml};
+use crate::nodes_writer::{to_json, to_properties, to_toml, to_yaml};
 use crate::property_file_reader::PropertyFileReader;
 use crate::yaml_file_reader::YamlFileReader;
 
@@ -142,5 +142,6 @@ fn convert_nodes(args: &Args, nodes: &Nodes) -> Result<String> {
         TargetFormat::Properties { .. } => to_properties(&args, &nodes),
         TargetFormat::Json { .. } => to_json(&args, &nodes),
         TargetFormat::Yaml { .. } => to_yaml(&args, &nodes),
+        TargetFormat::Toml { .. } => to_toml(&args, &nodes),
     }
 }

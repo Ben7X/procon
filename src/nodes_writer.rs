@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use linked_hash_map::LinkedHashMap;
 use log::debug;
+use toml::Value;
 use yaml_rust::{Yaml, YamlEmitter};
 
 use crate::args::{Args, TargetFormat};
@@ -70,6 +71,16 @@ pub fn to_properties(args: &Args, nodes: &Nodes) -> Result<String> {
     output_content(&args, string_content)
 }
 
+pub fn to_toml(args: &Args, nodes: &Nodes) -> Result<String> {
+    let mut string_content: String = "".to_string();
+    for node in nodes.iter() {
+        let toml_value: Value = node.into();
+        string_content.push_str(toml::to_string_pretty(&toml_value)?.as_str());
+    }
+
+    output_content(&args, string_content)
+}
+
 fn output_content(args: &Args, content: String) -> Result<String> {
     println!("{}", content);
     if args.dry_run {
@@ -108,6 +119,7 @@ pub(crate) fn default_filename(command: &TargetFormat) -> String {
         TargetFormat::Properties { file, .. } => (file, "properties".to_string()),
         TargetFormat::Json { file, .. } => (file, "json".to_string()),
         TargetFormat::Yaml { file, .. } => (file, "yaml".to_string()),
+        TargetFormat::Toml { file, .. } => (file, "toml".to_string()),
     };
     let mut filename = path_buf.file_stem().unwrap().to_str().unwrap();
 

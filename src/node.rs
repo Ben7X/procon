@@ -1,6 +1,7 @@
 extern crate exitcode;
 
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -8,6 +9,7 @@ use std::str::FromStr;
 use json::JsonValue;
 use linked_hash_map::LinkedHashMap;
 use log::{debug, trace};
+use toml::Value;
 use yaml_rust::Yaml;
 
 #[cfg(test)]
@@ -297,6 +299,36 @@ impl Into<Yaml> for &Node {
                     array.push(yaml_value);
                 }
                 Yaml::Array(array)
+            }
+        };
+        data
+    }
+}
+
+impl Into<Value> for &Node {
+    fn into(self) -> Value {
+        let data: Value = match &self.value {
+            NodeType::BOOLEAN(value) => Value::Boolean(value.to_owned()),
+            NodeType::NUMERIC(value) => Value::Float(value.parse::<f64>().unwrap()),
+            NodeType::STRING(value) => Value::from_str(value).unwrap(),
+            NodeType::OBJECT(value) => Value::String(value.to_string()),
+            NodeType::ARRAY(value) => {
+                let mut array = vec![];
+                for element in value {
+                    let toml_value: Value = Value::String(element.to_owned());
+                    array.push(toml_value);
+                }
+                Value::Array(array)
+            }
+            NodeType::NONE => {
+                let mut data: HashMap<String, Value> = HashMap::new();
+                for children in &self.children {
+                    let mut key: String = self.name.clone();
+                    key.push_str(children.name.clone().as_str());
+                    data.insert(key, children.into());
+                    // data.insert(children.name.clone(), children.into());
+                }
+                return Value::from(data);
             }
         };
         data

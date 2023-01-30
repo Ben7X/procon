@@ -108,6 +108,18 @@ pub enum TargetFormat {
         /// Input file
         file: PathBuf,
     },
+
+    /// Target format toml
+    Toml {
+        /// Property delimiter
+        ///
+        /// only used in combination with properties command
+        #[arg(short, long, default_value_t = Delimiter::Equals)]
+        property_delimiter: Delimiter,
+
+        /// Input file
+        file: PathBuf,
+    },
 }
 
 impl Display for TargetFormat {
@@ -123,9 +135,11 @@ impl TargetFormat {
             TargetFormat::Properties { file, .. } => file,
             TargetFormat::Json { file, .. } => file,
             TargetFormat::Yaml { file, .. } => file,
+            TargetFormat::Toml { file, .. } => file,
         }
     }
     pub fn delimiter(&self) -> Option<&Delimiter> {
+        // todo I guess there is a better way to handle this
         match self {
             TargetFormat::Properties {
                 property_delimiter, ..
@@ -134,6 +148,9 @@ impl TargetFormat {
                 property_delimiter, ..
             } => Some(property_delimiter),
             TargetFormat::Json {
+                property_delimiter, ..
+            } => Some(property_delimiter),
+            TargetFormat::Toml {
                 property_delimiter, ..
             } => Some(property_delimiter),
         }
